@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 import { getSql } from '../../lib/db';
 import { isUser, type User } from '../../lib/status';
 
+export const prerender = false;
+
 async function getActiveUser(): Promise<User | null> {
   const sql = getSql();
   const rows = await sql<{ active_user: string | null }[]>`
