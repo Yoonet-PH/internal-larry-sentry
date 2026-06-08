@@ -3,7 +3,7 @@
 
 create table if not exists webflow_status (
   id int primary key default 1 check (id = 1),
-  active_user text check (active_user in ('George', 'Arianne', 'Jep')),
+  active_user text check (active_user in ('AC', 'George', 'Arianne', 'Jep')),
   updated_at timestamptz not null default now()
 );
 

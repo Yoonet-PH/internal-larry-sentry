@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 
 export const prerender = false;
 
-const users = ['George', 'Arianne', 'Jep'] as const;
+const users = ['AC', 'George', 'Arianne', 'Jep'] as const;
 ---
 
 <Layout title="Who is using Webflow?">
@@ -12,7 +12,7 @@ const users = ['George', 'Arianne', 'Jep'] as const;
       class="w-full max-w-3xl space-y-8 rounded-2xl border border-border bg-card/80 p-8 shadow-sm backdrop-blur-sm"
     >
       <header class="space-y-2 text-center">
-        <h1 class="font-heading text-4xl font-bold tracking-tight text-foreground">
+        <h1 class="font-heading text-2xl font-bold tracking-tight text-foreground">
           Who is using Webflow right now?
         </h1>
         <p class="text-sm font-normal text-muted-foreground">
@@ -24,7 +24,7 @@ const users = ['George', 'Arianne', 'Jep'] as const;
         Webflow is free to use
       </div>
 
-      <div class="grid gap-4 sm:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {
           users.map((user) => (
             <article
@@ -48,7 +48,7 @@ const users = ['George', 'Arianne', 'Jep'] as const;
 </Layout>
 
 <script>
-  const USERS = ['George', 'Arianne', 'Jep'] as const;
+  const USERS = ['AC', 'George', 'Arianne', 'Jep'] as const;
   type User = (typeof USERS)[number];
 
   const banner = document.getElementById('status-banner')!;
