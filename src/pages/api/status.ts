@@ -1,10 +1,24 @@
 import type { APIRoute } from 'astro';
-import { kv } from '@vercel/kv';
-import { isUser, KV_KEY, type User } from '../../lib/status';
+import { getSql } from '../../lib/db';
+import { isUser, type User } from '../../lib/status';
 
 async function getActiveUser(): Promise<User | null> {
-  const value = await kv.get<string>(KV_KEY);
+  const sql = getSql();
+  const rows = await sql<{ active_user: string | null }[]>`
+    select active_user from webflow_status where id = 1
+  `;
+  const value = rows[0]?.active_user;
   return isUser(value) ? value : null;
+}
+
+async function setActiveUser(user: User | null): Promise<void> {
+  const sql = getSql();
+  await sql`
+    insert into webflow_status (id, active_user, updated_at)
+    values (1, ${user}, now())
+    on conflict (id) do update
+    set active_user = ${user}, updated_at = now()
+  `;
 }
 
 function json(data: unknown, status = 200): Response {
@@ -43,17 +57,17 @@ export const POST: APIRoute = async ({ request }) => {
       if (current !== user) {
         return json({ activeUser: current }, 409);
       }
-      await kv.del(KV_KEY);
+      await setActiveUser(null);
       return json({ activeUser: null });
     }
 
     if (current === null) {
-      await kv.set(KV_KEY, user);
+      await setActiveUser(user);
       return json({ activeUser: user });
     }
 
     if (current === user) {
-      await kv.del(KV_KEY);
+      await setActiveUser(null);
       return json({ activeUser: null });
     }
 

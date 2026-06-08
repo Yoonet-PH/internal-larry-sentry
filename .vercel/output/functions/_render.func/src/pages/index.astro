@@ -5,35 +5,34 @@ const users = ['George', 'Arianne', 'Jep'] as const;
 ---
 
 <Layout title="Who is using Webflow?">
-  <main class="flex min-h-screen flex-col items-center justify-center gap-10 px-6 py-12">
-    <div class="w-full max-w-2xl space-y-8 text-center">
-      <header class="space-y-2">
-        <h1 class="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
+  <main class="flex min-h-screen flex-col items-center justify-center px-6 py-12">
+    <div
+      class="w-full max-w-3xl space-y-8 rounded-2xl border border-border bg-card/80 p-8 shadow-sm backdrop-blur-sm"
+    >
+      <header class="space-y-2 text-center">
+        <h1 class="font-heading text-4xl font-bold tracking-tight text-foreground">
           Who is using Webflow right now?
         </h1>
-        <p class="text-sm text-zinc-500">Tap your name when you open Webflow. Everyone on this page sees the same status.</p>
+        <p class="text-sm font-normal text-muted-foreground">
+          Tap your name when you open Webflow. Everyone on this page sees the same status.
+        </p>
       </header>
 
-      <div
-        id="status-banner"
-        role="status"
-        aria-live="polite"
-        class="rounded-xl border px-6 py-4 text-base font-medium transition-colors duration-200"
-      >
-        🟢 Webflow is currently free to use.
+      <div id="status-banner" role="status" aria-live="polite" data-status="free">
+        Webflow is free to use
       </div>
 
       <div class="grid gap-4 sm:grid-cols-3">
         {
           users.map((user) => (
             <article
-              class="user-card flex flex-col items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
+              class="user-card flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-6 shadow-sm"
               data-user={user}
             >
-              <h2 class="text-xl font-semibold text-zinc-900">{user}</h2>
+              <h2 class="font-heading text-xl font-semibold text-card-foreground">{user}</h2>
               <button
                 type="button"
-                class="user-action w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500"
+                class="user-action btn-primary"
                 data-user={user}
               >
                 I'm in Webflow
@@ -52,21 +51,20 @@ const users = ['George', 'Arianne', 'Jep'] as const;
 
   const banner = document.getElementById('status-banner')!;
   const buttons = document.querySelectorAll<HTMLButtonElement>('.user-action');
+  const cards = document.querySelectorAll<HTMLElement>('.user-card');
 
   let activeUser: User | null = null;
   let pollTimer: ReturnType<typeof setInterval> | null = null;
 
   function renderBanner(user: User | null) {
     if (user) {
-      banner.className =
-        'rounded-xl border border-amber-300 bg-amber-50 px-6 py-4 text-base font-medium text-amber-900 transition-colors duration-200';
-      banner.textContent = `⚠️ ${user} is currently using Webflow!`;
+      banner.dataset.status = 'busy';
+      banner.textContent = `${user} is currently using Webflow`;
       return;
     }
 
-    banner.className =
-      'rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-base font-medium text-emerald-900 transition-colors duration-200';
-    banner.textContent = '🟢 Webflow is currently free to use.';
+    banner.dataset.status = 'free';
+    banner.textContent = 'Webflow is free to use';
   }
 
   function renderButtons(user: User | null) {
@@ -77,6 +75,17 @@ const users = ['George', 'Arianne', 'Jep'] as const;
 
       button.disabled = isBlocked;
       button.textContent = isActive ? 'Leave Webflow' : "I'm in Webflow";
+      button.classList.toggle('btn-primary', !isActive);
+      button.classList.toggle('btn-outline', isActive);
+    });
+
+    cards.forEach((card) => {
+      const name = card.dataset.user as User;
+      if (user === name) {
+        card.dataset.active = 'true';
+      } else {
+        delete card.dataset.active;
+      }
     });
   }
 
@@ -98,8 +107,7 @@ const users = ['George', 'Arianne', 'Jep'] as const;
       const user = await fetchStatus();
       applyStatus(user);
     } catch {
-      banner.className =
-        'rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-base font-medium text-red-900 transition-colors duration-200';
+      banner.dataset.status = 'error';
       banner.textContent = 'Could not load status. Retrying…';
     }
   }

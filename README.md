@@ -1,6 +1,6 @@
 # Webflow Status Dashboard
 
-A single-page Astro app that shows who is currently using Webflow. Status is shared across all visitors via Vercel KV (or Upstash Redis on Vercel).
+A single-page Astro app that shows who is currently using Webflow. Status is shared across all visitors via Neon Postgres.
 
 ## Users
 
@@ -15,6 +15,14 @@ A single-page Astro app that shows who is currently using Webflow. Status is sha
 - If someone else is active, other buttons are disabled.
 - The page polls `/api/status` every 2 seconds so everyone sees updates quickly.
 
+## Neon setup
+
+1. Create a project at [console.neon.tech](https://console.neon.tech).
+2. Open **SQL Editor** and run the script in [`db/schema.sql`](db/schema.sql).
+3. Go to **Dashboard → Connect** and copy the **connection string**.
+   - For Vercel/serverless, use the **pooled** connection string.
+4. Set it as `DATABASE_URL` in `.env.local` (and in Vercel env vars when deploying).
+
 ## Local development
 
 1. Install dependencies:
@@ -23,46 +31,32 @@ A single-page Astro app that shows who is currently using Webflow. Status is sha
    npm install
    ```
 
-2. Link the project to Vercel and add a Redis/KV store:
+2. Copy env vars:
 
    ```bash
-   npx vercel link
+   cp .env.example .env.local
    ```
 
-   In the Vercel dashboard: **Storage → Create → Redis** (or an existing KV/Upstash store), then link it to this project.
+   Paste your Neon `DATABASE_URL` into `.env.local`.
 
-3. Pull environment variables:
-
-   ```bash
-   npx vercel env pull .env.local
-   ```
-
-4. Run the dev server:
+3. Run the dev server:
 
    ```bash
    npm run dev
    ```
 
-   For API routes with KV, prefer:
-
-   ```bash
-   npx vercel dev
-   ```
-
-## Deploy
+## Deploy (Vercel)
 
 1. Push to GitHub and import the repo in Vercel.
-2. Create and link a Redis/KV store to the project.
-3. Deploy. Vercel injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically.
+2. Add `DATABASE_URL` in **Project Settings → Environment Variables** (use the pooled Neon connection string).
+3. Optionally link Neon via the [Vercel Marketplace integration](https://vercel.com/marketplace/neon) to auto-inject the variable.
+4. Deploy.
 
 ## Environment variables
 
 | Variable | Description |
 |---|---|
-| `KV_REST_API_URL` | REST URL for Vercel KV / Upstash Redis |
-| `KV_REST_API_TOKEN` | Auth token for the store |
-
-Copy `.env.example` to `.env.local` and fill in values when testing locally.
+| `DATABASE_URL` | Neon Postgres connection string (server-only; never expose to the browser) |
 
 ## API
 

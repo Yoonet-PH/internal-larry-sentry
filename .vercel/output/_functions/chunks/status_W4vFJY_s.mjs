@@ -1,14 +1,31 @@
-import { kv } from '@vercel/kv';
+import { neon } from '@neondatabase/serverless';
+
+function getSql() {
+  const url = "postgresql://neondb_owner:npg_ZiubGVTqY04A@ep-cold-firefly-aqim59i6-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+  return neon(url);
+}
 
 const USERS = ["George", "Arianne", "Jep"];
-const KV_KEY = "webflow:activeUser";
 function isUser(value) {
   return typeof value === "string" && USERS.includes(value);
 }
 
 async function getActiveUser() {
-  const value = await kv.get(KV_KEY);
+  const sql = getSql();
+  const rows = await sql`
+    select active_user from webflow_status where id = 1
+  `;
+  const value = rows[0]?.active_user;
   return isUser(value) ? value : null;
+}
+async function setActiveUser(user) {
+  const sql = getSql();
+  await sql`
+    insert into webflow_status (id, active_user, updated_at)
+    values (1, ${user}, now())
+    on conflict (id) do update
+    set active_user = ${user}, updated_at = now()
+  `;
 }
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -40,15 +57,15 @@ const POST = async ({ request }) => {
       if (current !== user) {
         return json({ activeUser: current }, 409);
       }
-      await kv.del(KV_KEY);
+      await setActiveUser(null);
       return json({ activeUser: null });
     }
     if (current === null) {
-      await kv.set(KV_KEY, user);
+      await setActiveUser(user);
       return json({ activeUser: user });
     }
     if (current === user) {
-      await kv.del(KV_KEY);
+      await setActiveUser(null);
       return json({ activeUser: null });
     }
     return json({ activeUser: current }, 409);
