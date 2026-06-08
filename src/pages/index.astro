@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 
 export const prerender = false;
 
-const users = ['AC', 'George', 'Arianne', 'Jep'] as const;
+const users = ['Admin', 'George', 'Arianne', 'Jep'] as const;
 ---
 
 <Layout title="Who is using Webflow?">
@@ -48,7 +48,7 @@ const users = ['AC', 'George', 'Arianne', 'Jep'] as const;
 </Layout>
 
 <script>
-  const USERS = ['AC', 'George', 'Arianne', 'Jep'] as const;
+  const USERS = ['Admin', 'George', 'Arianne', 'Jep'] as const;
   type User = (typeof USERS)[number];
 
   const banner = document.getElementById('status-banner')!;

@@ -4,7 +4,7 @@ A single-page Astro app that shows who is currently using Webflow. Status is sha
 
 ## Users
 
-- AC
+- Admin
 - George
 - Arianne
 - Jep
