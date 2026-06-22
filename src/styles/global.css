@@ -184,3 +184,128 @@
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+
+@media (width >= 64rem) {
+  .panel-card {
+    align-self: stretch;
+  }
+}
+
+.scheduler-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.scheduler-input {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--foreground);
+}
+
+.scheduler-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.scheduler-message {
+  font-size: 0.8125rem;
+  color: var(--destructive);
+}
+
+.scheduler-message-success {
+  color: hsl(160 60% 32%);
+}
+
+.scheduler-empty {
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  padding: 0.875rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  padding: 0.75rem;
+}
+
+.schedule-item-active {
+  border-color: hsl(231 100% 77% / 0.55);
+  background-color: hsl(231 100% 77% / 0.1);
+}
+
+.schedule-item-next {
+  border-color: hsl(183 70% 76% / 0.7);
+  background-color: hsl(183 70% 76% / 0.12);
+}
+
+.schedule-item-body {
+  min-width: 0;
+}
+
+.schedule-item-user {
+  font-family: var(--font-heading-family);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.schedule-item-time {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.schedule-item-badge {
+  display: inline-block;
+  margin-top: 0.375rem;
+  border-radius: 9999px;
+  background-color: var(--primary);
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary-foreground);
+}
+
+.schedule-item-next .schedule-item-badge {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.schedule-cancel {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.schedule-cancel:hover:not(:disabled) {
+  color: var(--destructive);
+}
+
+.schedule-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

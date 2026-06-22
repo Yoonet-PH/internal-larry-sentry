@@ -1,18 +1,18 @@
-# Webflow Status Dashboard
+# Larry Status Dashboard
 
-A single-page Astro app that shows who is currently using Webflow. Status is shared across all visitors via Neon Postgres.
+A single-page Astro app that shows who is currently using Larry. Status is shared across all visitors via Neon Postgres.
 
 ## Users
 
 - Admin
-- George
-- Arianne
-- Jep
+- Webbie
+- Designer
+- Developer
 
 ## How it works
 
-- Click **I'm in Webflow** to claim the seat.
-- Click **Leave Webflow** (same button when you are active) to release it.
+- Click **I'm on Larry** to claim the seat.
+- Click **Leave Larry** (same button when you are active) to release it.
 - If someone else is active, other buttons are disabled.
 - The page polls `/api/status` every 2 seconds so everyone sees updates quickly.
 
@@ -66,7 +66,7 @@ A single-page Astro app that shows who is currently using Webflow. Status is sha
 Returns:
 
 ```json
-{ "activeUser": "George" }
+{ "activeUser": "Webbie" }
 ```
 
 or `{ "activeUser": null }`.
@@ -76,13 +76,13 @@ or `{ "activeUser": null }`.
 Body:
 
 ```json
-{ "user": "George", "action": "enter" }
+{ "user": "Webbie", "action": "enter" }
 ```
 
 or:
 
 ```json
-{ "user": "George", "action": "leave" }
+{ "user": "Webbie", "action": "leave" }
 ```
 
 Returns the updated `{ "activeUser" }`. Responds with `409` if another user is already active.

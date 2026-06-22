@@ -1,161 +1,717 @@
 ---
+
 import Layout from '../layouts/Layout.astro';
+
+import { USERS } from '../lib/status';
+import { SCHEDULE_USERS } from '../lib/schedule-users';
+
+
 
 export const prerender = false;
 
-const users = ['Admin', 'George', 'Arianne', 'Jep'] as const;
+
+
+const users = USERS;
+const scheduleUsers = SCHEDULE_USERS;
+
 ---
 
-<Layout title="Who is using Webflow?">
-  <main class="flex min-h-screen flex-col items-center justify-center px-6 py-12">
-    <div
-      class="w-full max-w-3xl space-y-8 rounded-2xl border border-border bg-card/80 p-8 shadow-sm backdrop-blur-sm"
-    >
-      <header class="space-y-2 text-center">
-        <h1 class="font-heading text-2xl font-bold tracking-tight text-foreground">
-          Who is using Webflow right now?
-        </h1>
-        <p class="text-sm font-normal text-muted-foreground">
-          Tap your name when you open Webflow. Everyone on this page sees the same status.
-        </p>
-      </header>
 
-      <div id="status-banner" role="status" aria-live="polite" data-status="free">
-        Webflow is free to use
-      </div>
 
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {
-          users.map((user) => (
-            <article
-              class="user-card flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-6 shadow-sm"
-              data-user={user}
-            >
-              <h2 class="font-heading text-xl font-semibold text-card-foreground">{user}</h2>
-              <button
-                type="button"
-                class="user-action btn-primary"
+<Layout title="Who is using Larry?">
+
+  <main class="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
+
+    <div class="flex w-full max-w-7xl flex-col gap-6 lg:flex lg:flex-row lg:items-stretch lg:gap-8">
+
+      <section
+
+        class="panel-card w-full space-y-8 rounded-2xl border border-border bg-card/80 p-6 shadow-sm backdrop-blur-sm sm:p-8 lg:flex lg:flex-1 lg:flex-col"
+
+      >
+
+        <header class="space-y-2 text-center">
+
+          <h1 class="font-heading text-2xl font-bold tracking-tight text-foreground">
+
+            Who is using Larry right now?
+
+          </h1>
+
+          <p class="text-sm font-normal text-muted-foreground">
+
+            Click on your team name when you open Larry.<br />
+            Everyone on this page sees the same status.
+
+          </p>
+
+        </header>
+
+
+
+        <div id="status-banner" role="status" aria-live="polite" data-status="free">
+
+          Larry is free to use
+
+        </div>
+
+
+
+        <div class="grid flex-1 gap-4 sm:grid-cols-2 lg:content-start">
+
+          {
+
+            users.map((user) => (
+
+              <article
+
+                class="user-card flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-6 shadow-sm"
+
                 data-user={user}
+
               >
-                I'm in Webflow
+
+                <h2 class="font-heading text-xl font-semibold text-card-foreground">{user}</h2>
+
+                <button
+
+                  type="button"
+
+                  class="user-action btn-primary"
+
+                  data-user={user}
+
+                >
+
+                  I'm on Larry
+
+                </button>
+
+              </article>
+
+            ))
+
+          }
+
+        </div>
+
+      </section>
+
+
+
+      <aside
+        class="scheduler-panel panel-card flex w-full shrink-0 flex-col rounded-2xl border border-border bg-card/80 p-6 shadow-sm backdrop-blur-sm lg:flex-1 lg:min-w-0"
+        aria-labelledby="scheduler-heading"
+      >
+        <div class="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:gap-0">
+          <div class="scheduler-upcoming flex min-h-0 flex-1 flex-col lg:border-r lg:border-border lg:pr-6">
+            <h3 class="mb-1 font-heading text-sm font-bold uppercase tracking-wide text-muted-foreground">
+              Upcoming
+            </h3>
+            <p class="mb-3 text-xs text-muted-foreground">Philippines Time (GMT+8)</p>
+            <ul id="schedule-list" class="min-h-0 flex-1 space-y-2 overflow-y-auto" aria-live="polite">
+              <li class="scheduler-empty">Loading schedule…</li>
+            </ul>
+          </div>
+
+          <div class="scheduler-book flex min-h-0 flex-col lg:w-72 lg:shrink-0 lg:pl-6">
+            <header class="mb-6 space-y-1">
+              <h2 id="scheduler-heading" class="font-heading text-lg font-bold text-foreground">
+                Schedule Larry
+              </h2>
+              <p class="text-sm text-muted-foreground">
+                Book a time slot so the team knows when Larry is reserved. All times are Philippines Time (GMT+8).
+              </p>
+            </header>
+
+            <form id="schedule-form" class="space-y-4">
+              <div class="space-y-2">
+                <label class="scheduler-label" for="schedule-person">User</label>
+                <select id="schedule-person" class="scheduler-input" required>
+                  <option value="" disabled hidden selected>Select your name</option>
+                  {
+                    scheduleUsers.map((name) => (
+                      <option value={name}>{name}</option>
+                    ))
+                  }
+                </select>
+              </div>
+
+              <div class="space-y-2">
+                <label class="scheduler-label" for="schedule-date">Date</label>
+                <input id="schedule-date" class="scheduler-input" type="date" required />
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-2">
+                  <label class="scheduler-label" for="schedule-start">Start</label>
+                  <input id="schedule-start" class="scheduler-input" type="time" required />
+                </div>
+                <div class="space-y-2">
+                  <label class="scheduler-label" for="schedule-end">End</label>
+                  <input id="schedule-end" class="scheduler-input" type="time" required />
+                </div>
+              </div>
+
+              <p id="schedule-error" class="scheduler-message hidden" role="alert"></p>
+              <p id="schedule-success" class="scheduler-message scheduler-message-success hidden" role="status"></p>
+
+              <button type="submit" class="btn-primary" id="schedule-submit">
+                Book Larry
               </button>
-            </article>
-          ))
-        }
-      </div>
+            </form>
+          </div>
+        </div>
+      </aside>
+
     </div>
+
   </main>
+
 </Layout>
 
+
+
 <script>
-  const USERS = ['Admin', 'George', 'Arianne', 'Jep'] as const;
+
+  import { USERS } from '../lib/status';
+  import { SCHEDULE_USERS } from '../lib/schedule-users';
+  import {
+    APP_TIMEZONE_LABEL,
+    formatManilaDateInput,
+    formatManilaTimeInput,
+    formatScheduleRange,
+    parseManilaDateTime,
+    roundUpToNextHalfHourManila,
+  } from '../lib/timezone';
+
+
+
   type User = (typeof USERS)[number];
+  type ScheduleUser = (typeof SCHEDULE_USERS)[number];
+
+
+
+  type ScheduleEntry = {
+
+    id: string;
+
+    user: ScheduleUser;
+
+    startsAt: string;
+
+    endsAt: string;
+
+  };
+
+
 
   const banner = document.getElementById('status-banner')!;
+
   const buttons = document.querySelectorAll<HTMLButtonElement>('.user-action');
+
   const cards = document.querySelectorAll<HTMLElement>('.user-card');
 
+
+
   let activeUser: User | null = null;
+
   let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-  function renderBanner(user: User | null) {
+
+
+  function renderBanner(user: User | null, scheduledUser: ScheduleUser | null) {
+
     if (user) {
+
       banner.dataset.status = 'busy';
-      banner.textContent = `${user} is currently using Webflow`;
+
+      banner.textContent = `${user} is currently using Larry`;
+
       return;
+
     }
 
+
+
+    if (scheduledUser) {
+
+      banner.dataset.status = 'busy';
+
+      banner.textContent = `${scheduledUser} is currently using Larry`;
+
+      return;
+
+    }
+
+
+
     banner.dataset.status = 'free';
-    banner.textContent = 'Webflow is free to use';
+
+    banner.textContent = 'Larry is free to use';
+
   }
 
+
+
   function renderButtons(user: User | null) {
+
     buttons.forEach((button) => {
+
       const name = button.dataset.user as User;
+
       const isActive = user === name;
+
       const isBlocked = user !== null && user !== name;
 
+
+
       button.disabled = isBlocked;
-      button.textContent = isActive ? 'Leave Webflow' : "I'm in Webflow";
+
+      button.textContent = isActive ? 'Leave Larry' : "I'm on Larry";
+
       button.classList.toggle('btn-primary', !isActive);
+
       button.classList.toggle('btn-outline', isActive);
+
     });
 
+
+
     cards.forEach((card) => {
+
       const name = card.dataset.user as User;
+
       if (user === name) {
+
         card.dataset.active = 'true';
+
       } else {
+
         delete card.dataset.active;
+
       }
+
     });
+
+  }
+
+
+
+  function getActiveScheduleUser(): ScheduleUser | null {
+    const active = schedule.find(isScheduleActive);
+    return active?.user ?? null;
   }
 
   function applyStatus(user: User | null) {
+
     activeUser = user;
-    renderBanner(user);
+
+    renderBanner(user, getActiveScheduleUser());
+
     renderButtons(user);
+
   }
+
+
 
   async function fetchStatus(): Promise<User | null> {
+
     const response = await fetch('/api/status');
+
     if (!response.ok) throw new Error('Failed to fetch status');
+
     const data = await response.json();
+
     return data.activeUser ?? null;
+
   }
+
+
 
   async function refreshStatus() {
+
     try {
+
       const user = await fetchStatus();
+
       applyStatus(user);
+
     } catch {
+
       banner.dataset.status = 'error';
+
       banner.textContent = 'Could not load status. Retrying…';
+
     }
+
   }
 
+
+
   async function updateStatus(user: User) {
+
     const action = activeUser === user ? 'leave' : 'enter';
 
+
+
     const response = await fetch('/api/status', {
+
       method: 'POST',
+
       headers: { 'Content-Type': 'application/json' },
+
       body: JSON.stringify({ user, action }),
+
     });
+
+
 
     const data = await response.json();
 
+
+
     if (response.status === 409) {
+
       applyStatus(data.activeUser ?? null);
+
       return;
+
     }
+
+
 
     if (!response.ok) {
+
       throw new Error(data.error ?? 'Failed to update status');
+
     }
 
+
+
     applyStatus(data.activeUser ?? null);
+
   }
 
+
+
   buttons.forEach((button) => {
+
     button.addEventListener('click', async () => {
+
       const user = button.dataset.user as User;
+
       button.disabled = true;
 
+
+
       try {
+
         await updateStatus(user);
+
       } catch {
+
         await refreshStatus();
+
       } finally {
+
         renderButtons(activeUser);
+
       }
+
     });
+
   });
+
+
 
   refreshStatus();
+
   pollTimer = setInterval(refreshStatus, 2000);
 
-  window.addEventListener('beforeunload', () => {
-    if (pollTimer) clearInterval(pollTimer);
+
+
+  const scheduleForm = document.getElementById('schedule-form') as HTMLFormElement;
+
+  const schedulePerson = document.getElementById('schedule-person') as HTMLSelectElement;
+
+  const scheduleDate = document.getElementById('schedule-date') as HTMLInputElement;
+
+  const scheduleStart = document.getElementById('schedule-start') as HTMLInputElement;
+
+  const scheduleEnd = document.getElementById('schedule-end') as HTMLInputElement;
+
+  const scheduleError = document.getElementById('schedule-error')!;
+
+  const scheduleSuccess = document.getElementById('schedule-success')!;
+
+  const scheduleSubmit = document.getElementById('schedule-submit') as HTMLButtonElement;
+
+  const scheduleList = document.getElementById('schedule-list')!;
+
+
+
+  let schedule: ScheduleEntry[] = [];
+
+  let schedulePollTimer: ReturnType<typeof setInterval> | null = null;
+
+
+
+  function setDefaultScheduleTimes() {
+    const now = new Date();
+    const start = roundUpToNextHalfHourManila(now);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    scheduleDate.min = formatManilaDateInput(now);
+    scheduleDate.value = formatManilaDateInput(start);
+    scheduleStart.value = formatManilaTimeInput(start);
+    scheduleEnd.value = formatManilaTimeInput(end);
+    schedulePerson.selectedIndex = 0;
+  }
+
+
+
+  function clearScheduleMessages() {
+
+    scheduleError.classList.add('hidden');
+
+    scheduleSuccess.classList.add('hidden');
+
+    scheduleError.textContent = '';
+
+    scheduleSuccess.textContent = '';
+
+  }
+
+
+
+  function showScheduleError(message: string) {
+
+    scheduleSuccess.classList.add('hidden');
+
+    scheduleError.textContent = message;
+
+    scheduleError.classList.remove('hidden');
+
+  }
+
+
+
+  function showScheduleSuccess(message: string) {
+
+    scheduleError.classList.add('hidden');
+
+    scheduleSuccess.textContent = message;
+
+    scheduleSuccess.classList.remove('hidden');
+
+  }
+
+
+
+  function combineDateAndTime(dateValue: string, timeValue: string): Date | null {
+    return parseManilaDateTime(dateValue, timeValue);
+  }
+
+
+
+  function isScheduleActive(entry: ScheduleEntry): boolean {
+    const now = Date.now();
+    return new Date(entry.startsAt).getTime() <= now && new Date(entry.endsAt).getTime() > now;
+  }
+
+  function isScheduleNext(entry: ScheduleEntry, all: ScheduleEntry[]): boolean {
+    const now = Date.now();
+    const future = all.filter((item) => new Date(item.startsAt).getTime() > now);
+    return future[0]?.id === entry.id;
+  }
+
+
+
+  function renderSchedule() {
+    if (schedule.length === 0) {
+      scheduleList.innerHTML = '<li class="scheduler-empty">Nothing scheduled.</li>';
+    } else {
+      scheduleList.innerHTML = schedule
+        .map((entry) => {
+          const active = isScheduleActive(entry);
+          const next = isScheduleNext(entry, schedule);
+          const statusClass = active ? 'schedule-item-active' : next ? 'schedule-item-next' : '';
+          const statusLabel = active ? 'Now' : next ? 'Next' : '';
+
+          return `
+          <li class="schedule-item ${statusClass}" data-schedule-id="${entry.id}">
+            <div class="schedule-item-body">
+              <p class="schedule-item-user">${entry.user}</p>
+              <p class="schedule-item-time">${formatScheduleRange(entry.startsAt, entry.endsAt)}</p>
+              ${statusLabel ? `<span class="schedule-item-badge">${statusLabel}</span>` : ''}
+            </div>
+            <button type="button" class="schedule-cancel" data-schedule-id="${entry.id}" aria-label="Remove ${entry.user} from schedule">
+              Remove
+            </button>
+          </li>
+        `;
+        })
+        .join('');
+
+      scheduleList.querySelectorAll<HTMLButtonElement>('.schedule-cancel').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const id = button.dataset.scheduleId;
+          if (!id) return;
+
+          button.disabled = true;
+
+          try {
+            const response = await fetch('/api/schedule', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id }),
+            });
+
+            if (!response.ok) {
+              const data = await response.json();
+              throw new Error(data.error ?? 'Failed to remove from schedule');
+            }
+
+            await refreshSchedule();
+          } catch (error) {
+            showScheduleError(error instanceof Error ? error.message : 'Failed to remove from schedule');
+          } finally {
+            button.disabled = false;
+          }
+        });
+      });
+    }
+
+    renderBanner(activeUser, getActiveScheduleUser());
+  }
+
+
+
+  async function refreshSchedule() {
+    try {
+      const response = await fetch('/api/schedule');
+      if (!response.ok) throw new Error('Failed to load schedule');
+      const data = await response.json();
+      schedule = data.schedule ?? [];
+      renderSchedule();
+    } catch {
+      scheduleList.innerHTML = '<li class="scheduler-empty">Could not load schedule.</li>';
+    }
+  }
+
+
+
+  scheduleForm.addEventListener('submit', async (event) => {
+
+    event.preventDefault();
+
+    clearScheduleMessages();
+
+
+
+    const startsAt = combineDateAndTime(scheduleDate.value, scheduleStart.value);
+
+    const endsAt = combineDateAndTime(scheduleDate.value, scheduleEnd.value);
+
+
+
+    if (!startsAt || !endsAt) {
+
+      showScheduleError(`Enter a valid date and time in ${APP_TIMEZONE_LABEL}.`);
+
+      return;
+
+    }
+
+
+
+    if (endsAt <= startsAt) {
+
+      showScheduleError('End time must be after start time.');
+
+      return;
+
+    }
+
+
+
+    scheduleSubmit.disabled = true;
+
+
+
+    try {
+
+      const response = await fetch('/api/schedule', {
+
+        method: 'POST',
+
+        headers: { 'Content-Type': 'application/json' },
+
+        body: JSON.stringify({
+
+          user: schedulePerson.value,
+
+          startsAt: startsAt.toISOString(),
+
+          endsAt: endsAt.toISOString(),
+
+        }),
+
+      });
+
+
+
+      const data = await response.json();
+
+
+
+      if (!response.ok) {
+
+        showScheduleError(data.error ?? 'Failed to book Larry');
+
+        return;
+
+      }
+
+
+
+      showScheduleSuccess('Added to schedule.');
+
+      setDefaultScheduleTimes();
+
+      await refreshSchedule();
+
+    } catch {
+
+      showScheduleError('Failed to book Larry. Try again.');
+
+    } finally {
+
+      scheduleSubmit.disabled = false;
+
+    }
+
   });
+
+
+
+  setDefaultScheduleTimes();
+
+  refreshSchedule();
+
+  schedulePollTimer = setInterval(refreshSchedule, 30000);
+
+
+
+  window.addEventListener('beforeunload', () => {
+
+    if (pollTimer) clearInterval(pollTimer);
+
+    if (schedulePollTimer) clearInterval(schedulePollTimer);
+
+  });
+
 </script>
+
+
