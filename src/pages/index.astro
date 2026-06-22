@@ -226,19 +226,11 @@ const scheduleUsers = SCHEDULE_USERS;
 
       banner.dataset.status = 'busy';
 
-      banner.textContent = `${user} is currently using Larry`;
+      banner.textContent = scheduledUser
 
-      return;
+        ? `${scheduledUser} (${user}) is currently using Larry`
 
-    }
-
-
-
-    if (scheduledUser) {
-
-      banner.dataset.status = 'busy';
-
-      banner.textContent = `${scheduledUser} is currently using Larry`;
+        : `${user} is currently using Larry`;
 
       return;
 
