@@ -1,25 +1,77 @@
 import type { APIRoute } from 'astro';
 import { getSql } from '../../lib/db';
-import { isUser, type User } from '../../lib/status';
+import {
+  isClaudePlan,
+  isCreditsPercent,
+  isUser,
+  type ClaudePlan,
+  type User,
+} from '../../lib/status';
 
 export const prerender = false;
 
-async function getActiveUser(): Promise<User | null> {
+type StatusRow = {
+  active_user: string | null;
+  claude_plan: string | null;
+  remaining_credits: number | null;
+};
+
+type StatusPayload = {
+  activeUser: User | null;
+  claudePlan: ClaudePlan | null;
+  remainingCredits: number | null;
+};
+
+async function getStatus(): Promise<StatusPayload> {
   const sql = getSql();
-  const rows = await sql<{ active_user: string | null }[]>`
-    select active_user from webflow_status where id = 1
+  const rows = await sql<StatusRow[]>`
+    select active_user, claude_plan, remaining_credits
+    from webflow_status
+    where id = 1
   `;
-  const value = rows[0]?.active_user;
-  return isUser(value) ? value : null;
+  const row = rows[0];
+  const activeUser = isUser(row?.active_user) ? row.active_user : null;
+  const claudePlan = isClaudePlan(row?.claude_plan) ? row.claude_plan : null;
+  const remainingCredits =
+    typeof row?.remaining_credits === 'number' ? row.remaining_credits : null;
+
+  return { activeUser, claudePlan, remainingCredits };
 }
 
 async function setActiveUser(user: User | null): Promise<void> {
   const sql = getSql();
+  if (user === null) {
+    await sql`
+      update webflow_status
+      set active_user = null, claude_plan = null, updated_at = now()
+      where id = 1
+    `;
+    return;
+  }
+
   await sql`
     insert into webflow_status (id, active_user, updated_at)
     values (1, ${user}, now())
     on conflict (id) do update
     set active_user = ${user}, updated_at = now()
+  `;
+}
+
+async function setClaudePlan(plan: ClaudePlan): Promise<void> {
+  const sql = getSql();
+  await sql`
+    update webflow_status
+    set claude_plan = ${plan}, updated_at = now()
+    where id = 1
+  `;
+}
+
+async function setRemainingCredits(remainingCredits: number): Promise<void> {
+  const sql = getSql();
+  await sql`
+    update webflow_status
+    set remaining_credits = ${remainingCredits}, updated_at = now()
+    where id = 1
   `;
 }
 
@@ -32,8 +84,8 @@ function json(data: unknown, status = 200): Response {
 
 export const GET: APIRoute = async () => {
   try {
-    const activeUser = await getActiveUser();
-    return json({ activeUser });
+    const status = await getStatus();
+    return json(status);
   } catch {
     return json({ error: 'Failed to read status' }, 500);
   }
@@ -49,31 +101,55 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ error: 'Invalid user' }, 400);
     }
 
+    const current = await getStatus();
+
+    if (action === 'setPlan') {
+      const plan = body?.plan;
+      if (!isClaudePlan(plan)) {
+        return json({ error: 'Invalid plan' }, 400);
+      }
+      if (current.activeUser !== user) {
+        return json({ error: 'Only the active user can set the plan' }, 403);
+      }
+      await setClaudePlan(plan);
+      return json({ ...(await getStatus()) });
+    }
+
+    if (action === 'updateCredits') {
+      const remainingCredits = body?.remainingCredits;
+      if (!isCreditsPercent(remainingCredits)) {
+        return json({ error: 'Invalid credits value' }, 400);
+      }
+      if (current.activeUser !== user) {
+        return json({ error: 'Only the active user can update credits' }, 403);
+      }
+      await setRemainingCredits(remainingCredits);
+      return json({ ...(await getStatus()) });
+    }
+
     if (action !== 'enter' && action !== 'leave') {
       return json({ error: 'Invalid action' }, 400);
     }
 
-    const current = await getActiveUser();
-
     if (action === 'leave') {
-      if (current !== user) {
-        return json({ activeUser: current }, 409);
+      if (current.activeUser !== user) {
+        return json({ ...(await getStatus()) }, 409);
       }
       await setActiveUser(null);
-      return json({ activeUser: null });
+      return json({ ...(await getStatus()) });
     }
 
-    if (current === null) {
+    if (current.activeUser === null) {
       await setActiveUser(user);
-      return json({ activeUser: user });
+      return json({ ...(await getStatus()) });
     }
 
-    if (current === user) {
+    if (current.activeUser === user) {
       await setActiveUser(null);
-      return json({ activeUser: null });
+      return json({ ...(await getStatus()) });
     }
 
-    return json({ activeUser: current }, 409);
+    return json({ ...(await getStatus()) }, 409);
   } catch {
     return json({ error: 'Failed to update status' }, 500);
   }
