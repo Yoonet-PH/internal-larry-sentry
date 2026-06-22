@@ -1,50 +1,51 @@
-# Webflow Status Dashboard
+Larry Status Dashboard
+A single-page Astro app that shows who is currently using Larry. Status is shared across all visitors via Neon Postgres.
 
-A single-page Astro app that shows who is currently using Webflow. Status is shared across all visitors via Neon Postgres.
+Users
+Admin
 
-## Users
+George
 
-- Admin
-- George
-- Arianne
-- Jep
+Arianne
 
-## How it works
+Jep
 
-- Click **I'm in Webflow** to claim the seat.
-- Click **Leave Webflow** (same button when you are active) to release it.
-- If someone else is active, other buttons are disabled.
-- The page polls `/api/status` every 2 seconds so everyone sees updates quickly.
+How it works
+Click I'm in Larry to claim the seat.
 
-## Neon setup
+Click Leave Larry (same button when you are active) to release it.
 
-1. Create a project at [console.neon.tech](https://console.neon.tech).
-2. Open **SQL Editor** and run the script in [`db/schema.sql`](db/schema.sql).
-3. Go to **Dashboard → Connect** and copy the **connection string**.
-   - For Vercel/serverless, use the **pooled** connection string.
-4. Set it as `DATABASE_URL` in `.env.local` (and in Vercel env vars when deploying).
+If someone else is active, other buttons are disabled.
 
-## Local development
+The page polls /api/status every 2 seconds so everyone sees updates quickly.
 
-1. Install dependencies:
+Neon setup
+Create a project at console.neon.tech.
 
-   ```bash
-   npm install
-   ```
+Open SQL Editor and run the script in db/schema.sql.
+
+Go to Dashboard → Connect and copy the connection string.
+
+For Vercel/serverless, use the pooled connection string.
+
+Set it as DATABASE_URL in .env.local (and in Vercel env vars when deploying).
+
+Local development
+Install dependencies:
+
+npm install
+
 
 2. Copy env vars:
 
    ```bash
-   cp .env.example .env.local
-   ```
+cp .env.example .env.local
+Paste your Neon DATABASE_URL into .env.local.
 
-   Paste your Neon `DATABASE_URL` into `.env.local`.
+Run the dev server:
 
-3. Run the dev server:
+npm run dev
 
-   ```bash
-   npm run dev
-   ```
 
 ## Deploy (Vercel)
 
@@ -67,22 +68,15 @@ Returns:
 
 ```json
 { "activeUser": "George" }
-```
+or { "activeUser": null }.
 
-or `{ "activeUser": null }`.
-
-### `POST /api/status`
-
+POST /api/status
 Body:
 
-```json
+JSON
 { "user": "George", "action": "enter" }
-```
-
 or:
 
-```json
+JSON
 { "user": "George", "action": "leave" }
-```
-
-Returns the updated `{ "activeUser" }`. Responds with `409` if another user is already active.
+Returns the updated { "activeUser" }. Responds with 409 if another user is already active.
