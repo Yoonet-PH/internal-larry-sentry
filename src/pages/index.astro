@@ -21,6 +21,50 @@ const scheduleUsers = SCHEDULE_USERS;
 <Layout title="Who is using Larry?">
 
   <main class="dashboard-main">
+    <section class="dashboard-plan panel-card" aria-labelledby="plan-heading">
+      <div class="plan-bar">
+        <div class="plan-bar-head">
+          <h2 id="plan-heading" class="plan-title">Claude plan</h2>
+          <p class="plan-subtitle">Select your plan while on Larry.</p>
+        </div>
+
+        <div class="plan-actions">
+          <button type="button" class="plan-action btn-outline" data-plan="max" aria-disabled="true">
+            Max
+          </button>
+          <button type="button" class="plan-action btn-outline" data-plan="api" aria-disabled="true">
+            API
+          </button>
+        </div>
+
+        <div id="plan-credits" class="plan-credits hidden">
+          <div id="plan-credits-view" class="plan-credits-row">
+            <span id="plan-credits-label" class="plan-credits-text">Credits: —</span>
+            <button type="button" id="plan-credits-edit" class="plan-credits-edit" disabled>Edit</button>
+          </div>
+          <form id="plan-credits-form" class="plan-credits-form hidden">
+            <label class="sr-only" for="plan-credits-input">Remaining credits (%)</label>
+            <div class="plan-credits-form-row">
+              <input
+                id="plan-credits-input"
+                class="scheduler-input plan-credits-input"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                placeholder="%"
+                required
+              />
+              <button type="submit" class="btn-primary plan-credits-save">Save</button>
+              <button type="button" id="plan-credits-cancel" class="btn-outline plan-credits-cancel">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <p id="plan-error" class="plan-message hidden" role="alert"></p>
+    </section>
+
     <div class="dashboard-columns">
       <section class="dashboard-panel dashboard-status panel-card">
         <header class="dashboard-header">
@@ -134,47 +178,6 @@ const scheduleUsers = SCHEDULE_USERS;
       </aside>
 
     </div>
-
-    <section class="dashboard-plan panel-card" aria-labelledby="plan-heading">
-      <header class="plan-header">
-        <h2 id="plan-heading" class="plan-title">Claude plan</h2>
-        <p class="plan-subtitle">Select the plan you are using while on Larry.</p>
-      </header>
-
-      <div class="plan-actions">
-        <button type="button" class="plan-action btn-outline" data-plan="max" aria-disabled="true">
-          Claude Max
-        </button>
-        <button type="button" class="plan-action btn-outline" data-plan="api" aria-disabled="true">
-          Claude API
-        </button>
-      </div>
-
-      <p id="plan-error" class="plan-message hidden" role="alert"></p>
-
-      <div id="plan-credits" class="plan-credits hidden">
-        <div id="plan-credits-view" class="plan-credits-row">
-          <span id="plan-credits-label" class="plan-credits-text">Remaining credits: —</span>
-          <button type="button" id="plan-credits-edit" class="plan-credits-edit" disabled>Edit</button>
-        </div>
-        <form id="plan-credits-form" class="plan-credits-form hidden">
-          <label class="scheduler-label" for="plan-credits-input">Remaining credits (%)</label>
-          <div class="plan-credits-form-row">
-            <input
-              id="plan-credits-input"
-              class="scheduler-input"
-              type="number"
-              min="0"
-              max="100"
-              step="1"
-              required
-            />
-            <button type="submit" class="btn-primary plan-credits-save">Save</button>
-            <button type="button" id="plan-credits-cancel" class="btn-outline plan-credits-cancel">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </section>
 
   </main>
 
@@ -356,8 +359,8 @@ const scheduleUsers = SCHEDULE_USERS;
       planCredits.classList.remove('hidden');
       planCreditsLabel.textContent =
         remainingCredits !== null
-          ? `Remaining credits: ${remainingCredits}%`
-          : 'Remaining credits: —';
+          ? `Credits: ${remainingCredits}%`
+          : 'Credits: —';
       planCreditsEdit.disabled = !editable;
 
       if (!editable) {
