@@ -32,33 +32,37 @@ const scheduleUsers = SCHEDULE_USERS;
           <button type="button" class="plan-action btn-outline" data-plan="max" aria-disabled="true">
             Max
           </button>
-          <button type="button" class="plan-action btn-outline" data-plan="api" aria-disabled="true">
-            API
-          </button>
-        </div>
-
-        <div id="plan-credits" class="plan-credits hidden">
-          <div id="plan-credits-view" class="plan-credits-row">
-            <span id="plan-credits-label" class="plan-credits-text">Credits: —</span>
-            <button type="button" id="plan-credits-edit" class="plan-credits-edit" disabled>Edit</button>
-          </div>
-          <form id="plan-credits-form" class="plan-credits-form hidden">
-            <label class="sr-only" for="plan-credits-input">Remaining credits (%)</label>
-            <div class="plan-credits-form-row">
-              <input
-                id="plan-credits-input"
-                class="scheduler-input plan-credits-input"
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                placeholder="%"
-                required
-              />
-              <button type="submit" class="btn-primary plan-credits-save">Save</button>
-              <button type="button" id="plan-credits-cancel" class="btn-outline plan-credits-cancel">Cancel</button>
+          <div class="plan-api-stack">
+            <button type="button" class="plan-action btn-outline" data-plan="api" aria-disabled="true">
+              API
+            </button>
+            <div id="plan-credits" class="plan-credits">
+              <div id="plan-credits-view" class="plan-credits-view">
+                <div class="plan-credits-row">
+                  <span id="plan-credits-label" class="plan-credits-text">Credits Left: —</span>
+                  <button type="button" id="plan-credits-edit" class="plan-credits-edit" disabled aria-label="Edit credits left">Edit</button>
+                </div>
+                <p id="plan-credits-updated" class="plan-credits-updated hidden"></p>
+              </div>
+              <form id="plan-credits-form" class="plan-credits-form hidden">
+                <label class="sr-only" for="plan-credits-input">Credits left (%)</label>
+                <div class="plan-credits-form-row">
+                  <input
+                    id="plan-credits-input"
+                    class="scheduler-input plan-credits-input"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    placeholder="%"
+                    required
+                  />
+                  <button type="submit" class="btn-primary plan-credits-save">Save</button>
+                  <button type="button" id="plan-credits-cancel" class="btn-outline plan-credits-cancel">Cancel</button>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         </div>
       </div>
 
@@ -185,7 +189,7 @@ const scheduleUsers = SCHEDULE_USERS;
     <div class="modal-backdrop" data-dismiss-modal></div>
     <div class="modal-panel">
       <p id="larry-reminder-title" class="modal-message">
-        Please remember to select the plan you are using and update the remaining credits once you are finished.
+        Please remember to select the plan you are using and update credits left once you are finished.
       </p>
       <button type="button" class="btn-primary modal-dismiss" id="larry-reminder-dismiss">OK</button>
     </div>
@@ -201,6 +205,7 @@ const scheduleUsers = SCHEDULE_USERS;
   import { SCHEDULE_USERS } from '../lib/schedule-users';
   import {
     APP_TIMEZONE_LABEL,
+    formatCreditsUpdatedAt,
     formatManilaDateInput,
     formatManilaTimeInput,
     formatScheduleRange,
@@ -218,6 +223,7 @@ const scheduleUsers = SCHEDULE_USERS;
     activeUser: User | null;
     claudePlan: ClaudePlan | null;
     remainingCredits: number | null;
+    creditsUpdatedAt: string | null;
   };
 
 
@@ -248,6 +254,7 @@ const scheduleUsers = SCHEDULE_USERS;
   const planCredits = document.getElementById('plan-credits')!;
   const planCreditsView = document.getElementById('plan-credits-view')!;
   const planCreditsLabel = document.getElementById('plan-credits-label')!;
+  const planCreditsUpdated = document.getElementById('plan-credits-updated')!;
   const planCreditsEdit = document.getElementById('plan-credits-edit') as HTMLButtonElement;
   const planCreditsForm = document.getElementById('plan-credits-form') as HTMLFormElement;
   const planCreditsInput = document.getElementById('plan-credits-input') as HTMLInputElement;
@@ -260,9 +267,21 @@ const scheduleUsers = SCHEDULE_USERS;
   let localUser: User | null = null;
   let claudePlan: ClaudePlan | null = null;
   let remainingCredits: number | null = null;
+  let creditsUpdatedAt: string | null = null;
   let pollTimer: ReturnType<typeof setInterval> | null = null;
 
   const SESSION_USER_KEY = 'larry-session-user';
+
+  function parseStatusPayload(data: Record<string, unknown>): StatusPayload {
+    return {
+      activeUser: (data.activeUser as User | null) ?? null,
+      claudePlan: (data.claudePlan as ClaudePlan | null) ?? null,
+      remainingCredits:
+        typeof data.remainingCredits === 'number' ? data.remainingCredits : null,
+      creditsUpdatedAt:
+        typeof data.creditsUpdatedAt === 'string' ? data.creditsUpdatedAt : null,
+    };
+  }
 
   function isSessionUser(value: string | null): value is User {
     return value !== null && (USERS as readonly string[]).includes(value);
@@ -320,8 +339,11 @@ const scheduleUsers = SCHEDULE_USERS;
         bannerMain.textContent = `${user} is currently using Larry${planSuffix}`;
       }
 
-      if (claudePlan === 'api' && remainingCredits !== null) {
-        bannerCredits.textContent = `Remaining credits: ${remainingCredits}%`;
+      if (claudePlan === 'api') {
+        bannerCredits.textContent =
+          remainingCredits !== null
+            ? `Credits Left: ${remainingCredits}%`
+            : 'Credits Left: —';
         bannerCredits.classList.remove('hidden');
       } else {
         bannerCredits.textContent = '';
@@ -355,19 +377,22 @@ const scheduleUsers = SCHEDULE_USERS;
       button.classList.toggle('btn-outline', !isSelected);
     });
 
-    if (claudePlan === 'api') {
-      planCredits.classList.remove('hidden');
-      planCreditsLabel.textContent =
-        remainingCredits !== null
-          ? `Credits: ${remainingCredits}%`
-          : 'Credits: —';
-      planCreditsEdit.disabled = !editable;
+    planCreditsLabel.textContent =
+      remainingCredits !== null
+        ? `Credits Left: ${remainingCredits}%`
+        : 'Credits Left: —';
+    planCreditsEdit.disabled = !editable || claudePlan !== 'api';
 
-      if (!editable) {
-        hideCreditsEditor();
-      }
+    const updatedLabel = formatCreditsUpdatedAt(creditsUpdatedAt);
+    if (updatedLabel) {
+      planCreditsUpdated.textContent = updatedLabel;
+      planCreditsUpdated.classList.remove('hidden');
     } else {
-      planCredits.classList.add('hidden');
+      planCreditsUpdated.textContent = '';
+      planCreditsUpdated.classList.add('hidden');
+    }
+
+    if (!editable || claudePlan !== 'api') {
       hideCreditsEditor();
     }
   }
@@ -449,6 +474,7 @@ const scheduleUsers = SCHEDULE_USERS;
     activeUser = status.activeUser;
     claudePlan = status.claudePlan;
     remainingCredits = status.remainingCredits;
+    creditsUpdatedAt = status.creditsUpdatedAt;
 
     syncSessionUser();
 
@@ -463,12 +489,7 @@ const scheduleUsers = SCHEDULE_USERS;
     const response = await fetch('/api/status');
     if (!response.ok) throw new Error('Failed to fetch status');
     const data = await response.json();
-    return {
-      activeUser: data.activeUser ?? null,
-      claudePlan: data.claudePlan ?? null,
-      remainingCredits:
-        typeof data.remainingCredits === 'number' ? data.remainingCredits : null,
-    };
+    return parseStatusPayload(data);
   }
 
   async function refreshStatus() {
@@ -494,12 +515,7 @@ const scheduleUsers = SCHEDULE_USERS;
     const data = await response.json();
 
     if (response.status === 409) {
-      applyStatus({
-        activeUser: data.activeUser ?? null,
-        claudePlan: data.claudePlan ?? null,
-        remainingCredits:
-          typeof data.remainingCredits === 'number' ? data.remainingCredits : null,
-      });
+      applyStatus(parseStatusPayload(data));
       return 'conflict';
     }
 
@@ -515,12 +531,7 @@ const scheduleUsers = SCHEDULE_USERS;
       persistSessionUser(null);
     }
 
-    applyStatus({
-      activeUser: data.activeUser ?? null,
-      claudePlan: data.claudePlan ?? null,
-      remainingCredits:
-        typeof data.remainingCredits === 'number' ? data.remainingCredits : null,
-    });
+    applyStatus(parseStatusPayload(data));
 
     return action;
   }
@@ -537,12 +548,7 @@ const scheduleUsers = SCHEDULE_USERS;
       throw new Error(data.error ?? 'Failed to set plan');
     }
 
-    applyStatus({
-      activeUser: data.activeUser ?? null,
-      claudePlan: data.claudePlan ?? null,
-      remainingCredits:
-        typeof data.remainingCredits === 'number' ? data.remainingCredits : null,
-    });
+    applyStatus(parseStatusPayload(data));
   }
 
   async function updateCredits(user: User, credits: number) {
@@ -557,12 +563,7 @@ const scheduleUsers = SCHEDULE_USERS;
       throw new Error(data.error ?? 'Failed to update credits');
     }
 
-    applyStatus({
-      activeUser: data.activeUser ?? null,
-      claudePlan: data.claudePlan ?? null,
-      remainingCredits:
-        typeof data.remainingCredits === 'number' ? data.remainingCredits : null,
-    });
+    applyStatus(parseStatusPayload(data));
   }
 
 
@@ -617,7 +618,7 @@ const scheduleUsers = SCHEDULE_USERS;
   });
 
   planCreditsEdit.addEventListener('click', () => {
-    if (!canEditPlan()) return;
+    if (!canEditPlan() || claudePlan !== 'api') return;
     showCreditsEditor();
   });
 
@@ -627,7 +628,7 @@ const scheduleUsers = SCHEDULE_USERS;
 
   planCreditsForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!localUser || !canEditPlan()) return;
+    if (!localUser || !canEditPlan() || claudePlan !== 'api') return;
 
     const value = Number(planCreditsInput.value);
     if (!Number.isInteger(value) || value < 0 || value > 100) return;

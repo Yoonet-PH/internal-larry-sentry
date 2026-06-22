@@ -89,3 +89,37 @@ export function formatScheduleRange(startsAt: string, endsAt: string): string {
 
   return `${dayLabel} · ${startTime} – ${endTime}`;
 }
+
+export function formatCreditsUpdatedAt(iso: string | null): string | null {
+  if (!iso) return null;
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const now = new Date();
+  const formatDateKey = (value: Date) =>
+    value.toLocaleDateString('en-CA', { timeZone: APP_TIMEZONE });
+
+  const dateKey = formatDateKey(date);
+  const nowKey = formatDateKey(now);
+  const yesterdayKey = formatDateKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+
+  const dayLabel =
+    dateKey === nowKey
+      ? 'today'
+      : dateKey === yesterdayKey
+        ? 'yesterday'
+        : date.toLocaleDateString('en-PH', {
+            timeZone: APP_TIMEZONE,
+            month: 'short',
+            day: 'numeric',
+          });
+
+  const time = date.toLocaleTimeString('en-PH', {
+    timeZone: APP_TIMEZONE,
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+  return `Updated ${dayLabel}, ${time}`;
+}

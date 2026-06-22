@@ -14,18 +14,20 @@ type StatusRow = {
   active_user: string | null;
   claude_plan: string | null;
   remaining_credits: number | null;
+  credits_updated_at: Date | string | null;
 };
 
 type StatusPayload = {
   activeUser: User | null;
   claudePlan: ClaudePlan | null;
   remainingCredits: number | null;
+  creditsUpdatedAt: string | null;
 };
 
 async function getStatus(): Promise<StatusPayload> {
   const sql = getSql();
   const rows = await sql<StatusRow[]>`
-    select active_user, claude_plan, remaining_credits
+    select active_user, claude_plan, remaining_credits, credits_updated_at
     from webflow_status
     where id = 1
   `;
@@ -34,8 +36,14 @@ async function getStatus(): Promise<StatusPayload> {
   const claudePlan = isClaudePlan(row?.claude_plan) ? row.claude_plan : null;
   const remainingCredits =
     typeof row?.remaining_credits === 'number' ? row.remaining_credits : null;
+  const creditsUpdatedAt =
+    row?.credits_updated_at instanceof Date
+      ? row.credits_updated_at.toISOString()
+      : typeof row?.credits_updated_at === 'string'
+        ? row.credits_updated_at
+        : null;
 
-  return { activeUser, claudePlan, remainingCredits };
+  return { activeUser, claudePlan, remainingCredits, creditsUpdatedAt };
 }
 
 async function setActiveUser(user: User | null): Promise<void> {
@@ -70,7 +78,10 @@ async function setRemainingCredits(remainingCredits: number): Promise<void> {
   const sql = getSql();
   await sql`
     update webflow_status
-    set remaining_credits = ${remainingCredits}, updated_at = now()
+    set
+      remaining_credits = ${remainingCredits},
+      credits_updated_at = now(),
+      updated_at = now()
     where id = 1
   `;
 }
