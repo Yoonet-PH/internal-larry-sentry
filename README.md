@@ -1,50 +1,51 @@
-# Larry Status Dashboard
-
+Larry Status Dashboard
 A single-page Astro app that shows who is currently using Larry. Status is shared across all visitors via Neon Postgres.
 
-## Users
+Users
+Admin
 
-- Admin
-- Webbie
-- Designer
-- Developer
+George
 
-## How it works
+Arianne
 
-- Click **I'm on Larry** to claim the seat.
-- Click **Leave Larry** (same button when you are active) to release it.
-- If someone else is active, other buttons are disabled.
-- The page polls `/api/status` every 2 seconds so everyone sees updates quickly.
+Jep
 
-## Neon setup
+How it works
+Click I'm in Larry to claim the seat.
 
-1. Create a project at [console.neon.tech](https://console.neon.tech).
-2. Open **SQL Editor** and run the script in [`db/schema.sql`](db/schema.sql).
-3. Go to **Dashboard → Connect** and copy the **connection string**.
-   - For Vercel/serverless, use the **pooled** connection string.
-4. Set it as `DATABASE_URL` in `.env.local` (and in Vercel env vars when deploying).
+Click Leave Larry (same button when you are active) to release it.
 
-## Local development
+If someone else is active, other buttons are disabled.
 
-1. Install dependencies:
+The page polls /api/status every 2 seconds so everyone sees updates quickly.
 
-   ```bash
-   npm install
-   ```
+Neon setup
+Create a project at console.neon.tech.
+
+Open SQL Editor and run the script in db/schema.sql.
+
+Go to Dashboard → Connect and copy the connection string.
+
+For Vercel/serverless, use the pooled connection string.
+
+Set it as DATABASE_URL in .env.local (and in Vercel env vars when deploying).
+
+Local development
+Install dependencies:
+
+npm install
+
 
 2. Copy env vars:
 
    ```bash
-   cp .env.example .env.local
-   ```
+cp .env.example .env.local
+Paste your Neon DATABASE_URL into .env.local.
 
-   Paste your Neon `DATABASE_URL` into `.env.local`.
+Run the dev server:
 
-3. Run the dev server:
+npm run dev
 
-   ```bash
-   npm run dev
-   ```
 
 ## Deploy (Vercel)
 
@@ -66,23 +67,16 @@ A single-page Astro app that shows who is currently using Larry. Status is share
 Returns:
 
 ```json
-{ "activeUser": "Webbie" }
-```
+{ "activeUser": "George" }
+or { "activeUser": null }.
 
-or `{ "activeUser": null }`.
-
-### `POST /api/status`
-
+POST /api/status
 Body:
 
-```json
-{ "user": "Webbie", "action": "enter" }
-```
-
+JSON
+{ "user": "George", "action": "enter" }
 or:
 
-```json
-{ "user": "Webbie", "action": "leave" }
-```
-
-Returns the updated `{ "activeUser" }`. Responds with `409` if another user is already active.
+JSON
+{ "user": "George", "action": "leave" }
+Returns the updated { "activeUser" }. Responds with 409 if another user is already active.
