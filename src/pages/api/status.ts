@@ -2,8 +2,8 @@ import type { APIRoute } from 'astro';
 import { getSql } from '../../lib/db';
 import {
   isClaudePlan,
-  isCreditsPercent,
   isUser,
+  normalizeRemainingCredits,
   type ClaudePlan,
   type User,
 } from '../../lib/status';
@@ -13,14 +13,14 @@ export const prerender = false;
 type StatusRow = {
   active_user: string | null;
   claude_plan: string | null;
-  remaining_credits: number | null;
+  remaining_credits: string | null;
   credits_updated_at: Date | string | null;
 };
 
 type StatusPayload = {
   activeUser: User | null;
   claudePlan: ClaudePlan | null;
-  remainingCredits: number | null;
+  remainingCredits: string | null;
   creditsUpdatedAt: string | null;
 };
 
@@ -34,8 +34,7 @@ async function getStatus(): Promise<StatusPayload> {
   const row = rows[0];
   const activeUser = isUser(row?.active_user) ? row.active_user : null;
   const claudePlan = isClaudePlan(row?.claude_plan) ? row.claude_plan : null;
-  const remainingCredits =
-    typeof row?.remaining_credits === 'number' ? row.remaining_credits : null;
+  const remainingCredits = normalizeRemainingCredits(row?.remaining_credits);
   const creditsUpdatedAt =
     row?.credits_updated_at instanceof Date
       ? row.credits_updated_at.toISOString()
@@ -74,7 +73,7 @@ async function setClaudePlan(plan: ClaudePlan): Promise<void> {
   `;
 }
 
-async function setRemainingCredits(remainingCredits: number): Promise<void> {
+async function setRemainingCredits(remainingCredits: string): Promise<void> {
   const sql = getSql();
   await sql`
     update webflow_status
@@ -127,8 +126,8 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     if (action === 'updateCredits') {
-      const remainingCredits = body?.remainingCredits;
-      if (!isCreditsPercent(remainingCredits)) {
+      const remainingCredits = normalizeRemainingCredits(body?.remainingCredits);
+      if (remainingCredits === null) {
         return json({ error: 'Invalid credits value' }, 400);
       }
       if (current.activeUser !== user) {

@@ -45,16 +45,14 @@ const scheduleUsers = SCHEDULE_USERS;
                 <p id="plan-credits-updated" class="plan-credits-updated hidden"></p>
               </div>
               <form id="plan-credits-form" class="plan-credits-form hidden">
-                <label class="sr-only" for="plan-credits-input">Credits left (%)</label>
+                <label class="sr-only" for="plan-credits-input">Credits left</label>
                 <div class="plan-credits-form-row">
                   <input
                     id="plan-credits-input"
                     class="scheduler-input plan-credits-input"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="1"
-                    placeholder="%"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="108,000"
                     required
                   />
                   <button type="submit" class="btn-primary plan-credits-save">Save</button>
@@ -201,7 +199,7 @@ const scheduleUsers = SCHEDULE_USERS;
 
 <script>
 
-  import { USERS, CLAUDE_PLAN_LABELS } from '../lib/status';
+  import { USERS, CLAUDE_PLAN_LABELS, normalizeRemainingCredits } from '../lib/status';
   import { SCHEDULE_USERS } from '../lib/schedule-users';
   import {
     APP_TIMEZONE_LABEL,
@@ -222,7 +220,7 @@ const scheduleUsers = SCHEDULE_USERS;
   type StatusPayload = {
     activeUser: User | null;
     claudePlan: ClaudePlan | null;
-    remainingCredits: number | null;
+    remainingCredits: string | null;
     creditsUpdatedAt: string | null;
   };
 
@@ -266,7 +264,7 @@ const scheduleUsers = SCHEDULE_USERS;
   let activeUser: User | null = null;
   let localUser: User | null = null;
   let claudePlan: ClaudePlan | null = null;
-  let remainingCredits: number | null = null;
+  let remainingCredits: string | null = null;
   let creditsUpdatedAt: string | null = null;
   let pollTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -276,8 +274,7 @@ const scheduleUsers = SCHEDULE_USERS;
     return {
       activeUser: (data.activeUser as User | null) ?? null,
       claudePlan: (data.claudePlan as ClaudePlan | null) ?? null,
-      remainingCredits:
-        typeof data.remainingCredits === 'number' ? data.remainingCredits : null,
+      remainingCredits: normalizeRemainingCredits(data.remainingCredits),
       creditsUpdatedAt:
         typeof data.creditsUpdatedAt === 'string' ? data.creditsUpdatedAt : null,
     };
@@ -342,7 +339,7 @@ const scheduleUsers = SCHEDULE_USERS;
       if (claudePlan === 'api') {
         bannerCredits.textContent =
           remainingCredits !== null
-            ? `Credits Left: ${remainingCredits}%`
+            ? `Credits Left: ${remainingCredits}`
             : 'Credits Left: —';
         bannerCredits.classList.remove('hidden');
       } else {
@@ -379,7 +376,7 @@ const scheduleUsers = SCHEDULE_USERS;
 
     planCreditsLabel.textContent =
       remainingCredits !== null
-        ? `Credits Left: ${remainingCredits}%`
+        ? `Credits Left: ${remainingCredits}`
         : 'Credits Left: —';
     planCreditsEdit.disabled = !editable || claudePlan !== 'api';
 
@@ -400,8 +397,7 @@ const scheduleUsers = SCHEDULE_USERS;
   function showCreditsEditor() {
     planCreditsView.classList.add('hidden');
     planCreditsForm.classList.remove('hidden');
-    planCreditsInput.value =
-      remainingCredits !== null ? String(remainingCredits) : '';
+    planCreditsInput.value = remainingCredits ?? '';
     planCreditsInput.focus();
   }
 
@@ -551,7 +547,7 @@ const scheduleUsers = SCHEDULE_USERS;
     applyStatus(parseStatusPayload(data));
   }
 
-  async function updateCredits(user: User, credits: number) {
+  async function updateCredits(user: User, credits: string) {
     const response = await fetch('/api/status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -630,8 +626,8 @@ const scheduleUsers = SCHEDULE_USERS;
     event.preventDefault();
     if (!localUser || !canEditPlan() || claudePlan !== 'api') return;
 
-    const value = Number(planCreditsInput.value);
-    if (!Number.isInteger(value) || value < 0 || value > 100) return;
+    const value = normalizeRemainingCredits(planCreditsInput.value);
+    if (value === null) return;
 
     planCreditsForm.querySelector<HTMLButtonElement>('.plan-credits-save')!.disabled = true;
 

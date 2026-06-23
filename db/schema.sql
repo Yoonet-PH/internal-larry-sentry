@@ -5,7 +5,7 @@ create table if not exists webflow_status (
   id int primary key default 1 check (id = 1),
   active_user text check (active_user in ('Admin', 'Webbie', 'Designer', 'Developer')),
   claude_plan text check (claude_plan in ('max', 'api')),
-  remaining_credits smallint check (remaining_credits >= 0 and remaining_credits <= 100),
+  remaining_credits text check (remaining_credits is null or remaining_credits ~ '^\d{1,3}(,\d{3})*$'),
   credits_updated_at timestamptz,
   updated_at timestamptz not null default now()
 );
