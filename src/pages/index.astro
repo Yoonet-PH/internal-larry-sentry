@@ -44,16 +44,15 @@ const scheduleUsers = SCHEDULE_USERS;
                 </div>
                 <p id="plan-credits-updated" class="plan-credits-updated hidden"></p>
               </div>
-              <form id="plan-credits-form" class="plan-credits-form hidden">
+              <form id="plan-credits-form" class="plan-credits-form hidden" novalidate>
                 <label class="sr-only" for="plan-credits-input">Credits left</label>
                 <div class="plan-credits-form-row">
                   <input
                     id="plan-credits-input"
                     class="scheduler-input plan-credits-input"
                     type="text"
-                    inputmode="numeric"
-                    placeholder="108,000"
-                    required
+                    inputmode="decimal"
+                    placeholder="79.16"
                   />
                   <button type="submit" class="btn-primary plan-credits-save">Save</button>
                   <button type="button" id="plan-credits-cancel" class="btn-outline plan-credits-cancel">Cancel</button>
@@ -199,7 +198,7 @@ const scheduleUsers = SCHEDULE_USERS;
 
 <script>
 
-  import { USERS, CLAUDE_PLAN_LABELS, normalizeRemainingCredits } from '../lib/status';
+  import { USERS, CLAUDE_PLAN_LABELS, normalizeRemainingCredits, formatRemainingCreditsDisplay } from '../lib/status';
   import { SCHEDULE_USERS } from '../lib/schedule-users';
   import {
     APP_TIMEZONE_LABEL,
@@ -266,6 +265,7 @@ const scheduleUsers = SCHEDULE_USERS;
   let claudePlan: ClaudePlan | null = null;
   let remainingCredits: string | null = null;
   let creditsUpdatedAt: string | null = null;
+  let isEditingCredits = false;
   let pollTimer: ReturnType<typeof setInterval> | null = null;
 
   const SESSION_USER_KEY = 'larry-session-user';
@@ -337,9 +337,10 @@ const scheduleUsers = SCHEDULE_USERS;
       }
 
       if (claudePlan === 'api') {
+        const creditsDisplay = formatRemainingCreditsDisplay(remainingCredits);
         bannerCredits.textContent =
-          remainingCredits !== null
-            ? `Credits Left: ${remainingCredits}`
+          creditsDisplay !== null
+            ? `Credits Left: ${creditsDisplay}`
             : 'Credits Left: —';
         bannerCredits.classList.remove('hidden');
       } else {
@@ -374,9 +375,10 @@ const scheduleUsers = SCHEDULE_USERS;
       button.classList.toggle('btn-outline', !isSelected);
     });
 
+    const creditsDisplay = formatRemainingCreditsDisplay(remainingCredits);
     planCreditsLabel.textContent =
-      remainingCredits !== null
-        ? `Credits Left: ${remainingCredits}`
+      creditsDisplay !== null
+        ? `Credits Left: ${creditsDisplay}`
         : 'Credits Left: —';
     planCreditsEdit.disabled = !editable || claudePlan !== 'api';
 
@@ -389,12 +391,14 @@ const scheduleUsers = SCHEDULE_USERS;
       planCreditsUpdated.classList.add('hidden');
     }
 
-    if (!editable || claudePlan !== 'api') {
+    if (!isEditingCredits && (!editable || claudePlan !== 'api')) {
       hideCreditsEditor();
     }
   }
 
   function showCreditsEditor() {
+    isEditingCredits = true;
+    clearPlanError();
     planCreditsView.classList.add('hidden');
     planCreditsForm.classList.remove('hidden');
     planCreditsInput.value = remainingCredits ?? '';
@@ -402,6 +406,7 @@ const scheduleUsers = SCHEDULE_USERS;
   }
 
   function hideCreditsEditor() {
+    isEditingCredits = false;
     planCreditsView.classList.remove('hidden');
     planCreditsForm.classList.add('hidden');
   }
@@ -624,20 +629,32 @@ const scheduleUsers = SCHEDULE_USERS;
 
   planCreditsForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!localUser || !canEditPlan() || claudePlan !== 'api') return;
+    clearPlanError();
+
+    if (!localUser || !canEditPlan() || claudePlan !== 'api') {
+      showPlanError('Only the active user on this browser can update credits.');
+      return;
+    }
 
     const value = normalizeRemainingCredits(planCreditsInput.value);
-    if (value === null) return;
+    if (value === null) {
+      showPlanError('Enter a valid dollar amount (e.g. 79.16).');
+      planCreditsInput.focus();
+      return;
+    }
 
-    planCreditsForm.querySelector<HTMLButtonElement>('.plan-credits-save')!.disabled = true;
+    const saveButton = planCreditsForm.querySelector<HTMLButtonElement>('.plan-credits-save')!;
+    saveButton.disabled = true;
 
     try {
       await updateCredits(localUser, value);
+      clearPlanError();
       hideCreditsEditor();
-    } catch {
+    } catch (error) {
+      showPlanError(error instanceof Error ? error.message : 'Failed to update credits.');
       await refreshStatus();
     } finally {
-      planCreditsForm.querySelector<HTMLButtonElement>('.plan-credits-save')!.disabled = false;
+      saveButton.disabled = false;
     }
   });
 

@@ -732,6 +732,7 @@
 }
 
 .plan-credits.hidden,
+.plan-credits-view.hidden,
 .plan-credits-form.hidden {
   display: none;
 }

@@ -92,6 +92,19 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
+function getUpdateErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (
+    message.includes('webflow_status_remaining_credits_check') ||
+    message.includes('check constraint')
+  ) {
+    return 'Credits format is out of date. Run db/migrations/009-credits-dollar-format.sql in Neon SQL Editor, then try again.';
+  }
+
+  return 'Failed to update status';
+}
+
 export const GET: APIRoute = async () => {
   try {
     const status = await getStatus();
@@ -160,7 +173,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     return json({ ...(await getStatus()) }, 409);
-  } catch {
-    return json({ error: 'Failed to update status' }, 500);
+  } catch (error) {
+    return json({ error: getUpdateErrorMessage(error) }, 500);
   }
 };
