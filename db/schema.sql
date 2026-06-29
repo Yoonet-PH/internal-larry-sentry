@@ -23,6 +23,7 @@ create table if not exists larry_schedule (
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   created_at timestamptz not null default now(),
+  slack_notified_at timestamptz,
   check (ends_at > starts_at)
 );
 

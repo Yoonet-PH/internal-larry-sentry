@@ -52,13 +52,31 @@ npm run dev
 1. Push to GitHub and import the repo in Vercel.
 2. Add `DATABASE_URL` in **Project Settings → Environment Variables** (use the pooled Neon connection string).
 3. Optionally link Neon via the [Vercel Marketplace integration](https://vercel.com/marketplace/neon) to auto-inject the variable.
-4. Deploy.
+4. Add `SLACK_WEBHOOK_URL` and `CRON_SECRET` for Slack notifications (see below).
+5. Run `db/migrations/010-schedule-slack-notified.sql` in Neon SQL Editor if the database already exists.
+6. Deploy.
 
 ## Environment variables
 
 | Variable | Description |
 |---|---|
 | `DATABASE_URL` | Neon Postgres connection string (server-only; never expose to the browser) |
+| `SLACK_WEBHOOK_URL` | Slack Incoming Webhook URL for Larry notifications (optional in local dev) |
+| `CRON_SECRET` | Random secret that secures the schedule notification cron endpoint (required in production) |
+
+## Slack notifications
+
+Larry can post to a Slack channel via an Incoming Webhook:
+
+1. In Slack, go to **Apps → Incoming Webhooks** and add a webhook to your channel.
+2. Copy the webhook URL and set it as `SLACK_WEBHOOK_URL` in Vercel (and optionally `.env.local`).
+3. Generate a random `CRON_SECRET` in Vercel env vars (Vercel Cron sends it automatically).
+4. Run `db/migrations/010-schedule-slack-notified.sql` in Neon if upgrading an existing database.
+
+Notifications sent:
+
+- **Schedule slot start** — when a booked slot's `starts_at` time arrives (checked every minute via Vercel Cron).
+- **Leave Larry** — when a team role clicks Leave Larry.
 
 ## API
 
