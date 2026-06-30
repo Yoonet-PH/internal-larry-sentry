@@ -35,8 +35,9 @@ async function listPendingSlots(): Promise<PendingSlot[]> {
     select id, user_name, starts_at, ends_at
     from larry_schedule
     where slack_notified_at is null
-      and starts_at > now() - interval '1 minute'
-      and starts_at <= now() + interval '5 minutes'
+      and starts_at > now()
+      and starts_at > now() + interval '4 minutes'
+      and starts_at <= now() + interval '6 minutes'
     order by starts_at asc
   `;
 }
@@ -57,6 +58,8 @@ export const GET: APIRoute = async ({ request }) => {
 
   try {
     const slots = await listPendingSlots();
+    console.log(`Schedule notify cron: ${slots.length} slot(s) in 4–6 minute reminder window`);
+
     let notified = 0;
 
     for (const slot of slots) {
@@ -69,9 +72,13 @@ export const GET: APIRoute = async ({ request }) => {
       if (sent) {
         await markSlotNotified(slot.id);
         notified += 1;
+        console.log(`Schedule notify cron: reminded ${slot.user_name} for slot ${slot.id}`);
+      } else {
+        console.warn(`Schedule notify cron: failed to notify ${slot.user_name} for slot ${slot.id}`);
       }
     }
 
+    console.log(`Schedule notify cron: completed, notified ${notified}/${slots.length}`);
     return json({ notified });
   } catch (error) {
     console.error('Schedule notify cron failed:', error);

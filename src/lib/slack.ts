@@ -59,7 +59,9 @@ export async function notifyScheduleSlotReminder(
   const range = formatScheduleRange(startsAt, endsAt);
   const closing = pickScheduleSlotClosing();
   const mention = formatSlackMention(userName);
-  const text = `${mention} — your Larry slot starts in 5 minutes (${range}). ${closing}`;
+  const minutesLeft = Math.max(1, Math.round((new Date(startsAt).getTime() - Date.now()) / 60000));
+  const minuteLabel = minutesLeft === 1 ? 'minute' : 'minutes';
+  const text = `${mention} — your Larry slot starts in ${minutesLeft} ${minuteLabel} (${range}). ${closing}`;
   return sendSlackMessage(text);
 }
 
