@@ -2,7 +2,24 @@ import type { ScheduleUser } from './schedule-users';
 import type { User } from './status';
 import { formatScheduleRange } from './timezone';
 
-function getWebhookUrl(): string | undefined {
+const SCHEDULE_SLOT_CLOSINGS = [
+  'Your shift with Larry the AI starts *now*. Let’s crush that to-do list! 🚀',
+  'Look who just clocked in for you! Larry the AI is online and ready for your scheduled session.',
+  'Your scheduled time with Larry the AI is officially live. Have fun! 🤖',
+  'Player 2 has entered the chat. Larry the AI is unlocked and ready for your dedicated slot!',
+  'It’s your turn! Larry the AI is fully operational and at your command. ⚡',
+  'Larry the AI is officially open for your personal session. Make the most of it!',
+  'Time to level up your workflow—Larry the AI is fired up and waiting just for you.',
+  'Your scheduled block with our in-house AI, Larry, starts right now. Let\'s make some magic happen!',
+  'Larry the AI is officially on duty for your session! Dive in and let him do the heavy lifting.',
+  'Your digital superpower for the hour is ready. Larry the AI is officially good to go!',
+] as const;
+
+function pickScheduleSlotClosing(): string {
+  const index = Math.floor(Math.random() * SCHEDULE_SLOT_CLOSINGS.length);
+  return SCHEDULE_SLOT_CLOSINGS[index];
+}
+
   return import.meta.env.SLACK_WEBHOOK_URL;
 }
 
@@ -38,7 +55,8 @@ export async function notifyScheduleSlotStarted(
   endsAt: string,
 ): Promise<boolean> {
   const range = formatScheduleRange(startsAt, endsAt);
-  const text = `${userName} — your Larry slot has started (${range}). You can now use Larry the AI.`;
+  const closing = pickScheduleSlotClosing();
+  const text = `@${userName} — your Larry slot has started (${range}). ${closing}`;
   return sendSlackMessage(text);
 }
 
