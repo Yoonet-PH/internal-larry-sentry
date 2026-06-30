@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSql } from '../../lib/db';
-import { notifyLarryLeft } from '../../lib/slack';
+import { processLarryFreeNotifications } from '../../lib/schedule-notify';
 import {
   isClaudePlan,
   isUser,
@@ -161,9 +161,9 @@ export const POST: APIRoute = async ({ request }) => {
       }
       await setActiveUser(null);
       try {
-        await notifyLarryLeft(user);
+        await processLarryFreeNotifications();
       } catch (error) {
-        console.error('Leave Larry Slack notification failed:', error);
+        console.error('Larry ready Slack notification failed:', error);
       }
       return json({ ...(await getStatus()) });
     }
@@ -176,9 +176,9 @@ export const POST: APIRoute = async ({ request }) => {
     if (current.activeUser === user) {
       await setActiveUser(null);
       try {
-        await notifyLarryLeft(user);
+        await processLarryFreeNotifications();
       } catch (error) {
-        console.error('Leave Larry Slack notification failed:', error);
+        console.error('Larry ready Slack notification failed:', error);
       }
       return json({ ...(await getStatus()) });
     }

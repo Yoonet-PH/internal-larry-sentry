@@ -1,7 +1,8 @@
 import type { ScheduleUser } from './schedule-users';
-import { getSlackUserId } from './slack-users';
+import { getServerEnv } from './env';
 import type { User } from './status';
 import { formatScheduleRange } from './timezone';
+import { getSlackUserId } from './slack-users';
 
 const SCHEDULE_SLOT_CLOSINGS = [
   'Your shift with Larry the AI starts *soon*. Let’s crush that to-do list! 🚀',
@@ -19,6 +20,8 @@ const SCHEDULE_SLOT_CLOSINGS = [
 type SlackApiResponse = {
   ok: boolean;
   error?: string;
+  needed?: string;
+  provided?: string;
   channel?: { id: string };
 };
 
@@ -28,7 +31,24 @@ function pickScheduleSlotClosing(): string {
 }
 
 function getBotToken(): string | undefined {
-  return import.meta.env.SLACK_BOT_TOKEN;
+  const token = getServerEnv('SLACK_BOT_TOKEN');
+  if (!token) {
+    return undefined;
+  }
+
+  if (token.startsWith('xoxp-')) {
+    console.error(
+      'Slack notification skipped: SLACK_BOT_TOKEN is a user token (xoxp-). Use the Bot User OAuth Token (xoxb-) from Slack app → OAuth & Permissions.',
+    );
+    return undefined;
+  }
+
+  if (!token.startsWith('xoxb-')) {
+    console.error('Slack notification skipped: SLACK_BOT_TOKEN must be a bot token (xoxb-).');
+    return undefined;
+  }
+
+  return token;
 }
 
 async function slackApi<T extends SlackApiResponse>(
@@ -53,7 +73,14 @@ async function slackApi<T extends SlackApiResponse>(
 
     const data = (await response.json()) as T;
     if (!data.ok) {
-      console.error(`Slack ${method} failed:`, data.error ?? response.statusText);
+      if (data.error === 'missing_scope') {
+        console.error(
+          `Slack ${method} failed: missing_scope`,
+          data.needed ? `(needs ${data.needed}, token has: ${data.provided ?? 'unknown'})` : '',
+        );
+      } else {
+        console.error(`Slack ${method} failed:`, data.error ?? response.statusText);
+      }
       return null;
     }
 
@@ -64,31 +91,27 @@ async function slackApi<T extends SlackApiResponse>(
   }
 }
 
-async function openDirectMessageChannel(slackUserId: string): Promise<string | null> {
-  const data = await slackApi<SlackApiResponse>('conversations.open', { users: slackUserId });
-  return data?.channel?.id ?? null;
+export async function verifySlackBotToken(): Promise<boolean> {
+  const data = await slackApi<SlackApiResponse & { user?: string }>('auth.test', {});
+  if (!data) {
+    return false;
+  }
+  console.log(`Slack bot ready as ${data.user ?? 'unknown'}`);
+  return true;
 }
 
 export async function sendSlackDirectMessage(slackUserId: string, text: string): Promise<boolean> {
-  // Post directly to the user ID (requires chat:write). conversations.open needs im:write.
-  const direct = await slackApi<SlackApiResponse>('chat.postMessage', {
-    channel: slackUserId,
-    text,
-  });
-  if (direct) {
-    return true;
-  }
-
-  const channelId = await openDirectMessageChannel(slackUserId);
+  const opened = await slackApi<SlackApiResponse>('conversations.open', { users: slackUserId });
+  const channelId = opened?.channel?.id;
   if (!channelId) {
     return false;
   }
 
-  const data = await slackApi<SlackApiResponse>('chat.postMessage', {
+  const posted = await slackApi<SlackApiResponse>('chat.postMessage', {
     channel: channelId,
     text,
   });
-  return data !== null;
+  return posted !== null;
 }
 
 export async function notifyScheduleSlotReminder(
@@ -110,7 +133,22 @@ export async function notifyScheduleSlotReminder(
   return sendSlackDirectMessage(slackUserId, text);
 }
 
+export async function notifyScheduleSlotReady(
+  userName: ScheduleUser,
+  startsAt: string,
+  endsAt: string,
+): Promise<boolean> {
+  const slackUserId = getSlackUserId(userName);
+  if (!slackUserId) {
+    console.warn(`Slack DM skipped: no Slack ID for ${userName}`);
+    return false;
+  }
+
+  const range = formatScheduleRange(startsAt, endsAt);
+  const text = `Larry is free — your scheduled slot (${range}) has started. Go claim Larry!`;
+  return sendSlackDirectMessage(slackUserId, text);
+}
+
 export async function notifyLarryLeft(_user: User): Promise<boolean> {
-  // Team roles (Admin, Webbie, etc.) are not mapped to Slack IDs; no DM target.
   return false;
 }

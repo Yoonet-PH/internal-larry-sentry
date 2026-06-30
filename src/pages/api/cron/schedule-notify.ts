@@ -1,16 +1,13 @@
 import type { APIRoute } from 'astro';
-import { getSql } from '../../../lib/db';
-import { notifyScheduleSlotReminder } from '../../../lib/slack';
-import type { ScheduleUser } from '../../../lib/schedule-users';
+import { getServerEnv } from '../../../lib/env';
+import {
+  listPendingReminders,
+  markReminderNotified,
+  processLarryFreeNotifications,
+} from '../../../lib/schedule-notify';
+import { notifyScheduleSlotReminder, verifySlackBotToken } from '../../../lib/slack';
 
 export const prerender = false;
-
-type PendingSlot = {
-  id: string;
-  user_name: ScheduleUser;
-  starts_at: Date;
-  ends_at: Date;
-};
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -20,7 +17,7 @@ function json(data: unknown, status = 200): Response {
 }
 
 function isAuthorized(request: Request): boolean {
-  const cronSecret = import.meta.env.CRON_SECRET;
+  const cronSecret = getServerEnv('CRON_SECRET');
   if (!cronSecret) {
     return false;
   }
@@ -29,40 +26,23 @@ function isAuthorized(request: Request): boolean {
   return authHeader === `Bearer ${cronSecret}`;
 }
 
-async function listPendingSlots(): Promise<PendingSlot[]> {
-  const sql = getSql();
-  return sql<PendingSlot[]>`
-    select id, user_name, starts_at, ends_at
-    from larry_schedule
-    where slack_notified_at is null
-      and starts_at > now()
-      and starts_at > now() + interval '3 minutes'
-      and starts_at <= now() + interval '6 minutes'
-    order by starts_at asc
-  `;
-}
-
-async function markSlotNotified(id: string): Promise<void> {
-  const sql = getSql();
-  await sql`
-    update larry_schedule
-    set slack_notified_at = now()
-    where id = ${id}::uuid
-  `;
-}
-
 export const GET: APIRoute = async ({ request }) => {
   if (!isAuthorized(request)) {
     return json({ error: 'Unauthorized' }, 401);
   }
 
   try {
-    const slots = await listPendingSlots();
-    console.log(`Schedule notify cron: ${slots.length} slot(s) in 3–6 minute reminder window`);
+    const slackReady = await verifySlackBotToken();
+    if (!slackReady) {
+      console.error('Schedule notify cron: Slack bot token is missing or invalid');
+    }
 
-    let notified = 0;
+    const reminderSlots = await listPendingReminders();
+    console.log(`Schedule notify cron: ${reminderSlots.length} slot(s) in 4–6 minute reminder window`);
 
-    for (const slot of slots) {
+    let reminded = 0;
+
+    for (const slot of reminderSlots) {
       const sent = await notifyScheduleSlotReminder(
         slot.user_name,
         slot.starts_at.toISOString(),
@@ -70,16 +50,20 @@ export const GET: APIRoute = async ({ request }) => {
       );
 
       if (sent) {
-        await markSlotNotified(slot.id);
-        notified += 1;
+        await markReminderNotified(slot.id);
+        reminded += 1;
         console.log(`Schedule notify cron: reminded ${slot.user_name} for slot ${slot.id}`);
       } else {
-        console.warn(`Schedule notify cron: failed to notify ${slot.user_name} for slot ${slot.id}`);
+        console.warn(`Schedule notify cron: failed to remind ${slot.user_name} for slot ${slot.id}`);
       }
     }
 
-    console.log(`Schedule notify cron: completed, notified ${notified}/${slots.length}`);
-    return json({ notified });
+    const readyNotified = await processLarryFreeNotifications();
+
+    console.log(
+      `Schedule notify cron: completed, reminded ${reminded}/${reminderSlots.length}, ready ${readyNotified}`,
+    );
+    return json({ reminded, readyNotified });
   } catch (error) {
     console.error('Schedule notify cron failed:', error);
     return json({ error: 'Failed to process schedule notifications' }, 500);

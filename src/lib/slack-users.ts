@@ -1,6 +1,6 @@
 import type { ScheduleUser } from './schedule-users';
 
-// CJ, JL, Louie, Paul, and Yura fall back to @Name until their Slack member IDs are added.
+// CJ, JL, Louie, and Yura fall back to @Name until their Slack member IDs are added.
 const SLACK_USER_IDS: Partial<Record<ScheduleUser, string>> = {
   Arianne: 'U09944SQARM',
   Cassey: 'U8TB96N85',
@@ -10,6 +10,7 @@ const SLACK_USER_IDS: Partial<Record<ScheduleUser, string>> = {
   Jaisa: 'U07LQUSSKB6',
   Jep: 'U04JS5UKPR8',
   John: 'U0603TXJW0G',
+  Paul: 'U089EM6MZHB',
   Runnel: 'U03JCG706E6',
 };
 
