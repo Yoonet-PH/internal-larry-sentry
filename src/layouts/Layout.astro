@@ -24,9 +24,9 @@ const { title = 'Larry Status' } = Astro.props;
     />
     <title>{title}</title>
   </head>
-  <body class="relative min-h-screen bg-background text-foreground font-sans antialiased">
+  <body class="relative flex min-h-screen flex-col bg-background text-foreground font-sans antialiased">
     <div aria-hidden="true" class="dot-pattern dot-grid-overlay fixed inset-0"></div>
-    <div class="relative z-10">
+    <div class="relative z-10 flex w-full flex-1 flex-col items-center justify-center">
       <slot />
     </div>
   </body>

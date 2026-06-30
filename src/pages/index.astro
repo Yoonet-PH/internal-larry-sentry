@@ -32,34 +32,33 @@ const scheduleUsers = SCHEDULE_USERS;
           <button type="button" class="plan-action btn-outline" data-plan="max" aria-disabled="true">
             Max
           </button>
-          <div class="plan-api-stack">
-            <button type="button" class="plan-action btn-outline" data-plan="api" aria-disabled="true">
-              API
-            </button>
-            <div id="plan-credits" class="plan-credits">
-              <div id="plan-credits-view" class="plan-credits-view">
-                <div class="plan-credits-row">
-                  <span id="plan-credits-label" class="plan-credits-text">Credits Left: —</span>
-                  <button type="button" id="plan-credits-edit" class="plan-credits-edit" disabled aria-label="Edit credits left">Edit</button>
-                </div>
-                <p id="plan-credits-updated" class="plan-credits-updated hidden"></p>
-              </div>
-              <form id="plan-credits-form" class="plan-credits-form hidden" novalidate>
-                <label class="sr-only" for="plan-credits-input">Credits left</label>
-                <div class="plan-credits-form-row">
-                  <input
-                    id="plan-credits-input"
-                    class="scheduler-input plan-credits-input"
-                    type="text"
-                    inputmode="decimal"
-                    placeholder="79.16"
-                  />
-                  <button type="submit" class="btn-primary plan-credits-save">Save</button>
-                  <button type="button" id="plan-credits-cancel" class="btn-outline plan-credits-cancel">Cancel</button>
-                </div>
-              </form>
+          <button type="button" class="plan-action btn-outline" data-plan="api" aria-disabled="true">
+            API
+          </button>
+        </div>
+
+        <div id="plan-credits" class="plan-credits">
+          <div id="plan-credits-view" class="plan-credits-view">
+            <div class="plan-credits-row">
+              <span id="plan-credits-label" class="plan-credits-text">Credits Left: —</span>
+              <button type="button" id="plan-credits-edit" class="plan-credits-edit" disabled aria-label="Edit credits left">Edit</button>
             </div>
+            <p id="plan-credits-updated" class="plan-credits-updated hidden"></p>
           </div>
+          <form id="plan-credits-form" class="plan-credits-form hidden" novalidate>
+            <label class="sr-only" for="plan-credits-input">Credits left</label>
+            <div class="plan-credits-form-row">
+              <input
+                id="plan-credits-input"
+                class="scheduler-input plan-credits-input"
+                type="text"
+                inputmode="decimal"
+                placeholder="79.16"
+              />
+              <button type="submit" class="btn-primary plan-credits-save">Save</button>
+              <button type="button" id="plan-credits-cancel" class="btn-outline plan-credits-cancel">Cancel</button>
+            </div>
+          </form>
         </div>
       </div>
 
