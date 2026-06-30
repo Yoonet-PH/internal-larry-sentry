@@ -1,5 +1,5 @@
 import type { ScheduleUser } from './schedule-users';
-import { formatSlackMention } from './slack-users';
+import { getSlackUserId } from './slack-users';
 import type { User } from './status';
 import { formatScheduleRange } from './timezone';
 
@@ -16,45 +16,70 @@ const SCHEDULE_SLOT_CLOSINGS = [
   'Your digital superpower for the hour is almost ready. Larry the AI will be good to go soon!',
 ] as const;
 
+type SlackApiResponse = {
+  ok: boolean;
+  error?: string;
+  channel?: { id: string };
+};
+
 function pickScheduleSlotClosing(): string {
   const index = Math.floor(Math.random() * SCHEDULE_SLOT_CLOSINGS.length);
   return SCHEDULE_SLOT_CLOSINGS[index];
 }
 
-function getWebhookUrl(): string | undefined {
-  return import.meta.env.SLACK_WEBHOOK_URL;
+function getBotToken(): string | undefined {
+  return import.meta.env.SLACK_BOT_TOKEN;
 }
 
-const SLACK_NOTIFICATIONS_ENABLED = false;
-
-export async function sendSlackMessage(text: string): Promise<boolean> {
-  if (!SLACK_NOTIFICATIONS_ENABLED) {
-    return false;
-  }
-
-  const webhookUrl = getWebhookUrl();
-  if (!webhookUrl) {
-    console.error('Slack notification skipped: missing SLACK_WEBHOOK_URL');
-    return false;
+async function slackApi<T extends SlackApiResponse>(
+  method: string,
+  body: Record<string, string>,
+): Promise<T | null> {
+  const token = getBotToken();
+  if (!token) {
+    console.error('Slack notification skipped: missing SLACK_BOT_TOKEN');
+    return null;
   }
 
   try {
-    const response = await fetch(webhookUrl, {
+    const response = await fetch(`https://slack.com/api/${method}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      body: JSON.stringify(body),
     });
 
-    if (!response.ok) {
-      console.error(`Slack notification failed: ${response.status} ${response.statusText}`);
-      return false;
+    const data = (await response.json()) as T;
+    if (!data.ok) {
+      console.error(`Slack ${method} failed:`, data.error ?? response.statusText);
+      return null;
     }
 
-    return true;
+    return data;
   } catch (error) {
-    console.error('Slack notification failed:', error);
+    console.error(`Slack ${method} failed:`, error);
+    return null;
+  }
+}
+
+async function openDirectMessageChannel(slackUserId: string): Promise<string | null> {
+  const data = await slackApi<SlackApiResponse>('conversations.open', { users: slackUserId });
+  return data?.channel?.id ?? null;
+}
+
+export async function sendSlackDirectMessage(slackUserId: string, text: string): Promise<boolean> {
+  const channelId = await openDirectMessageChannel(slackUserId);
+  if (!channelId) {
     return false;
   }
+
+  const data = await slackApi<SlackApiResponse>('chat.postMessage', {
+    channel: channelId,
+    text,
+  });
+  return data !== null;
 }
 
 export async function notifyScheduleSlotReminder(
@@ -62,16 +87,21 @@ export async function notifyScheduleSlotReminder(
   startsAt: string,
   endsAt: string,
 ): Promise<boolean> {
+  const slackUserId = getSlackUserId(userName);
+  if (!slackUserId) {
+    console.warn(`Slack DM skipped: no Slack ID for ${userName}`);
+    return false;
+  }
+
   const range = formatScheduleRange(startsAt, endsAt);
   const closing = pickScheduleSlotClosing();
-  const mention = formatSlackMention(userName);
   const minutesLeft = Math.max(1, Math.round((new Date(startsAt).getTime() - Date.now()) / 60000));
   const minuteLabel = minutesLeft === 1 ? 'minute' : 'minutes';
-  const text = `${mention} — your Larry slot starts in ${minutesLeft} ${minuteLabel} (${range}). ${closing}`;
-  return sendSlackMessage(text);
+  const text = `Your Larry slot starts in ${minutesLeft} ${minuteLabel} (${range}). ${closing}`;
+  return sendSlackDirectMessage(slackUserId, text);
 }
 
-export async function notifyLarryLeft(user: User): Promise<boolean> {
-  const text = `${user} has left Larry. Larry is now free to use.`;
-  return sendSlackMessage(text);
+export async function notifyLarryLeft(_user: User): Promise<boolean> {
+  // Team roles (Admin, Webbie, etc.) are not mapped to Slack IDs; no DM target.
+  return false;
 }

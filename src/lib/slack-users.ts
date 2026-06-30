@@ -13,6 +13,10 @@ const SLACK_USER_IDS: Partial<Record<ScheduleUser, string>> = {
   Runnel: 'U03JCG706E6',
 };
 
+export function getSlackUserId(userName: ScheduleUser): string | undefined {
+  return SLACK_USER_IDS[userName];
+}
+
 export function formatSlackMention(userName: ScheduleUser): string {
   const slackId = SLACK_USER_IDS[userName];
   return slackId ? `<@${slackId}>` : `@${userName}`;

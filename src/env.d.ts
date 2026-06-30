@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly DATABASE_URL: string;
-  readonly SLACK_WEBHOOK_URL?: string;
+  readonly SLACK_BOT_TOKEN?: string;
   readonly CRON_SECRET?: string;
 }
 
