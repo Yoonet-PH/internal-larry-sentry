@@ -20,6 +20,7 @@ function pickScheduleSlotClosing(): string {
   return SCHEDULE_SLOT_CLOSINGS[index];
 }
 
+function getWebhookUrl(): string | undefined {
   return import.meta.env.SLACK_WEBHOOK_URL;
 }
 
