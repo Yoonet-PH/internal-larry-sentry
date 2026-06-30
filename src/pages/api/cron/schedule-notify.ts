@@ -36,7 +36,7 @@ async function listPendingSlots(): Promise<PendingSlot[]> {
     from larry_schedule
     where slack_notified_at is null
       and starts_at > now()
-      and starts_at > now() + interval '4 minutes'
+      and starts_at > now() + interval '3 minutes'
       and starts_at <= now() + interval '6 minutes'
     order by starts_at asc
   `;
@@ -58,7 +58,7 @@ export const GET: APIRoute = async ({ request }) => {
 
   try {
     const slots = await listPendingSlots();
-    console.log(`Schedule notify cron: ${slots.length} slot(s) in 4–6 minute reminder window`);
+    console.log(`Schedule notify cron: ${slots.length} slot(s) in 3–6 minute reminder window`);
 
     let notified = 0;
 

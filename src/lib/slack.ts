@@ -70,6 +70,15 @@ async function openDirectMessageChannel(slackUserId: string): Promise<string | n
 }
 
 export async function sendSlackDirectMessage(slackUserId: string, text: string): Promise<boolean> {
+  // Post directly to the user ID (requires chat:write). conversations.open needs im:write.
+  const direct = await slackApi<SlackApiResponse>('chat.postMessage', {
+    channel: slackUserId,
+    text,
+  });
+  if (direct) {
+    return true;
+  }
+
   const channelId = await openDirectMessageChannel(slackUserId);
   if (!channelId) {
     return false;
