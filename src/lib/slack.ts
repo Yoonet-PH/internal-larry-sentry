@@ -25,7 +25,13 @@ function getWebhookUrl(): string | undefined {
   return import.meta.env.SLACK_WEBHOOK_URL;
 }
 
+const SLACK_NOTIFICATIONS_ENABLED = false;
+
 export async function sendSlackMessage(text: string): Promise<boolean> {
+  if (!SLACK_NOTIFICATIONS_ENABLED) {
+    return false;
+  }
+
   const webhookUrl = getWebhookUrl();
   if (!webhookUrl) {
     console.error('Slack notification skipped: missing SLACK_WEBHOOK_URL');
