@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSql } from '../../../lib/db';
-import { notifyScheduleSlotStarted } from '../../../lib/slack';
+import { notifyScheduleSlotReminder } from '../../../lib/slack';
 import type { ScheduleUser } from '../../../lib/schedule-users';
 
 export const prerender = false;
@@ -35,8 +35,8 @@ async function listPendingSlots(): Promise<PendingSlot[]> {
     select id, user_name, starts_at, ends_at
     from larry_schedule
     where slack_notified_at is null
-      and starts_at <= now()
-      and starts_at > now() - interval '15 minutes'
+      and starts_at > now() - interval '1 minute'
+      and starts_at <= now() + interval '5 minutes'
     order by starts_at asc
   `;
 }
@@ -60,7 +60,7 @@ export const GET: APIRoute = async ({ request }) => {
     let notified = 0;
 
     for (const slot of slots) {
-      const sent = await notifyScheduleSlotStarted(
+      const sent = await notifyScheduleSlotReminder(
         slot.user_name,
         slot.starts_at.toISOString(),
         slot.ends_at.toISOString(),

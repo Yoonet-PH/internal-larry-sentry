@@ -75,7 +75,7 @@ Larry can post to a Slack channel via an Incoming Webhook:
 
 Notifications sent:
 
-- **Schedule slot start** — when a booked slot's `starts_at` time arrives (checked every minute via Vercel Cron).
+- **Schedule slot reminder** — 5 minutes before a booked slot's `starts_at` time (checked every minute via Vercel Cron).
 - **Leave Larry** — when a team role clicks Leave Larry.
 
 ## API

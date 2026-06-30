@@ -1,4 +1,5 @@
 import type { ScheduleUser } from './schedule-users';
+import { formatSlackMention } from './slack-users';
 import type { User } from './status';
 import { formatScheduleRange } from './timezone';
 
@@ -50,14 +51,15 @@ export async function sendSlackMessage(text: string): Promise<boolean> {
   }
 }
 
-export async function notifyScheduleSlotStarted(
+export async function notifyScheduleSlotReminder(
   userName: ScheduleUser,
   startsAt: string,
   endsAt: string,
 ): Promise<boolean> {
   const range = formatScheduleRange(startsAt, endsAt);
   const closing = pickScheduleSlotClosing();
-  const text = `@${userName} — your Larry slot has started (${range}). ${closing}`;
+  const mention = formatSlackMention(userName);
+  const text = `${mention} — your Larry slot starts in 5 minutes (${range}). ${closing}`;
   return sendSlackMessage(text);
 }
 
