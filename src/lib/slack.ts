@@ -4,16 +4,16 @@ import type { User } from './status';
 import { formatScheduleRange } from './timezone';
 
 const SCHEDULE_SLOT_CLOSINGS = [
-  'Your shift with Larry the AI starts *now*. Let’s crush that to-do list! 🚀',
-  'Look who just clocked in for you! Larry the AI is online and ready for your scheduled session.',
-  'Your scheduled time with Larry the AI is officially live. Have fun! 🤖',
-  'Player 2 has entered the chat. Larry the AI is unlocked and ready for your dedicated slot!',
-  'It’s your turn! Larry the AI is fully operational and at your command. ⚡',
-  'Larry the AI is officially open for your personal session. Make the most of it!',
-  'Time to level up your workflow—Larry the AI is fired up and waiting just for you.',
-  'Your scheduled block with our in-house AI, Larry, starts right now. Let\'s make some magic happen!',
-  'Larry the AI is officially on duty for your session! Dive in and let him do the heavy lifting.',
-  'Your digital superpower for the hour is ready. Larry the AI is officially good to go!',
+  'Your shift with Larry the AI starts *soon*. Let’s crush that to-do list! 🚀',
+  'Larry the AI is warming up and will be ready for your scheduled session in just a few minutes.',
+  'Your scheduled time with Larry the AI starts soon. Have fun! 🤖',
+  'Get ready—Larry the AI will be unlocked and ready for your dedicated slot in just a few minutes!',
+  'It’s almost your turn! Larry the AI will be fully operational and at your command soon. ⚡',
+  'Larry the AI will be open for your personal session soon. Make the most of it!',
+  'Time to level up your workflow soon—Larry the AI is fired up and waiting just for you.',
+  'Your scheduled block with our in-house AI, Larry, starts soon. Let\'s make some magic happen!',
+  'Larry the AI will be on duty for your session soon! Get ready to dive in and let him do the heavy lifting.',
+  'Your digital superpower for the hour is almost ready. Larry the AI will be good to go soon!',
 ] as const;
 
 function pickScheduleSlotClosing(): string {
