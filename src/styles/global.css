@@ -123,6 +123,7 @@
   .dashboard-scheduler {
     flex: 1;
     min-width: 0;
+    min-height: 0;
     align-self: stretch;
   }
 
@@ -204,6 +205,8 @@
   .scheduler-layout {
     flex-direction: row;
     align-items: stretch;
+    flex: 1;
+    min-height: 0;
     gap: 0;
   }
 }
@@ -215,6 +218,8 @@
 }
 
 .scheduler-upcoming {
+  flex: 1;
+  min-height: 0;
   justify-content: flex-start;
 }
 
@@ -225,6 +230,7 @@
 @media (width >= 64rem) {
   .scheduler-upcoming {
     flex: 1;
+    min-height: 0;
     padding-right: 1.5rem;
     border-right: 1px solid var(--border);
   }
@@ -254,11 +260,14 @@
 
 .schedule-list {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.5rem;
+  min-height: 0;
   margin: 0;
   padding: 0;
   list-style: none;
+  overflow-y: auto;
 }
 
 .scheduler-book-header {
@@ -574,11 +583,6 @@
   .scheduler-input {
     padding: 0.5rem 0.625rem;
     font-size: 0.8125rem;
-  }
-
-  .schedule-list {
-    max-height: 10rem;
-    overflow-y: auto;
   }
 
   .scheduler-empty,
